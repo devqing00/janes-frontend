@@ -48,7 +48,7 @@ export default function Hero({
       LUXURIOUS{" "}
       <span className="italic font-normal opacity-80">and</span>
       <br />
-      CONTEMPORARY
+      CLASSY
       <br />
       FASHION
       <br />

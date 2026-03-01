@@ -1,36 +1,169 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# JANES — Frontend
+
+Next.js 16 storefront and admin panel for JANES, a fashion designer e-commerce platform. Built with the App Router, TypeScript, Tailwind CSS v4, and Sanity CMS.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router, Turbopack) |
+| Language | TypeScript 5 (strict) |
+| Styling | Tailwind CSS v4 |
+| CMS | Sanity v3 (`@sanity/client`) |
+| Animation | Framer Motion 12 |
+| Auth | `jose` JWT — HTTP-only cookie |
+| Payments | Paystack + Direct Bank Transfer |
+| Data Fetching | SWR (admin), Sanity CDN (public) |
+
+---
+
+## Project Structure
+
+```
+src/
+├── app/
+│   ├── (site)/           # Public storefront
+│   │   ├── page.tsx      # Homepage
+│   │   ├── shop/         # Shop listing + [slug] product detail
+│   │   ├── collections/  # All collections
+│   │   ├── lookbook/
+│   │   ├── about/
+│   │   ├── contact/
+│   │   ├── wishlist/
+│   │   ├── faq/
+│   │   ├── shipping/
+│   │   ├── privacy/
+│   │   ├── terms/
+│   │   └── checkout/     # Checkout + /callback confirmation
+│   ├── admin/
+│   │   ├── login/        # Admin login page
+│   │   └── (shell)/      # Authenticated admin panel
+│   │       ├── page.tsx  # Dashboard
+│   │       ├── products/
+│   │       ├── collections/
+│   │       ├── orders/
+│   │       ├── content/
+│   │       ├── messages/
+│   │       └── settings/
+│   ├── api/              # API routes (Next.js Route Handlers)
+│   │   ├── admin/        # Protected admin REST API
+│   │   ├── products/
+│   │   ├── collections/
+│   │   ├── checkout/
+│   │   ├── paystack/webhook/
+│   │   ├── payment-methods/
+│   │   ├── shipping-rates/
+│   │   └── contact/
+│   ├── globals.css
+│   └── layout.tsx
+├── components/           # Shared React components
+├── lib/
+│   ├── auth.ts           # getAdminSession() JWT helper
+│   └── sanity.ts         # Sanity client + writeClient + urlFor
+└── sanity/schemas/       # Sanity schema definitions (plain objects)
+```
+
+---
+
+## Routes
+
+### Public (`(site)/`)
+
+| Route | Description |
+|---|---|
+| `/` | Homepage — hero, editorial grid, featured products |
+| `/shop` | Full shop listing with filters |
+| `/shop/[slug]` | Product detail page |
+| `/collections` | All collections overview |
+| `/lookbook` | Lookbook gallery |
+| `/about` | About JANES |
+| `/contact` | Contact form |
+| `/wishlist` | Client-side wishlist |
+| `/checkout` | Checkout form + payment |
+| `/checkout/callback` | Post-payment confirmation |
+| `/faq` | FAQs |
+| `/shipping` | Shipping policy |
+| `/privacy` | Privacy policy |
+| `/terms` | Terms and conditions |
+
+### Admin (`admin/(shell)/`)
+
+| Route | Description |
+|---|---|
+| `/admin` | Dashboard |
+| `/admin/products` | Product CRUD |
+| `/admin/collections` | Collection CRUD |
+| `/admin/orders` | Orders list and detail |
+| `/admin/content` | CMS content manager |
+| `/admin/messages` | Contact messages |
+| `/admin/settings` | Site settings, payment toggles, bank accounts |
+| `/admin/login` | Login page |
+
+---
+
+## Authentication
+
+Admin routes are protected by a JWT stored in an HTTP-only cookie named `janes-admin-token` (24h expiry). All `/api/admin/*` route handlers call `getAdminSession()` from `src/lib/auth.ts` and return `401` if the session is invalid.
+
+---
+
+## Payments
+
+### Paystack
+Redirect-based flow. Checkout posts to `/api/checkout` → receives Paystack authorization URL → redirects user → Paystack calls `/api/paystack/webhook` with HMAC-SHA512 signature → order saved on `charge.success`.
+
+### Direct Bank Transfer
+Order created immediately with status `awaiting_payment`. Bank transfer reference format: `BT-{timestamp}-{uuid8}`. Bank account details are read from Sanity `siteSettings`. Both methods are toggled in Admin → Settings.
+
+---
+
+## Checkout Autofill
+
+After a successful delivery step, the user's email, name, address, city, state, and phone are saved to `localStorage` under the key `janes_checkout_saved`. On next visit, a banner prompts the user to autofill their details. The saved data is cleared after successful order submission.
+
+---
+
+## Environment Variables
+
+Create a `.env.local` file in this directory:
+
+```env
+NEXT_PUBLIC_SANITY_PROJECT_ID=o2vehhtt
+NEXT_PUBLIC_SANITY_DATASET=production
+SANITY_API_TOKEN=your_sanity_write_token
+
+PAYSTACK_SECRET_KEY=sk_live_...
+NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=pk_live_...
+
+JWT_SECRET=your_jwt_secret_min_32_chars
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=your_admin_password
+
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+```
+
+---
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Admin panel: [http://localhost:3000/admin](http://localhost:3000/admin)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Command | Description |
+|---|---|
+| `npm run dev` | Start dev server (Turbopack) |
+| `npm run build` | Production build |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |

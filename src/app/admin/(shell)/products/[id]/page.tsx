@@ -1,0 +1,256 @@
+"use client";
+
+import ConfirmModal from "@/components/admin/ConfirmModal";
+import ImageUpload, { type UploadedImage } from "@/components/admin/ImageUpload";
+import { useToast } from "@/components/admin/Toast";
+import { useRouter, useParams } from "next/navigation";
+import { useState, useEffect } from "react";
+
+export default function EditProductPage() {
+  const router = useRouter();
+  const params = useParams();
+  const id = params.id as string;
+  const { toast } = useToast();
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [images, setImages] = useState<UploadedImage[]>([]);
+  const [form, setForm] = useState({
+    name: "",
+    slug: "",
+    category: "womenswear",
+    subcategory: "",
+    price: "",
+    description: "",
+    details: "",
+    sizes: "",
+    status: "draft",
+  });
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch(`/api/admin/products/${id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setForm({
+            name: data.name || "",
+            slug: data.slug || "",
+            category: data.category || "Womenswear",
+            subcategory: data.subcategory || "",
+            price: String(data.price || ""),
+            description: data.description || "",
+            details: data.details || "",
+            sizes: data.sizes || "",
+            status: data.status || "draft",
+          });
+          // Map existing images — API returns images[]{asset->{ _id, url }}
+          if (Array.isArray(data.images)) {
+            setImages(
+              data.images
+                .filter((img: { asset?: { _id: string; url: string } }) => img?.asset?.url)
+                .map((img: { asset: { _id: string; url: string } }) => ({
+                  _id: img.asset._id,
+                  url: img.asset.url,
+                  assetRef: {
+                    _type: "image" as const,
+                    asset: { _type: "reference" as const, _ref: img.asset._id },
+                  },
+                }))
+            );
+          }
+        } else {
+          toast("Product not found", "error");
+          router.push("/admin/products");
+        }
+      } catch {
+        toast("Failed to load product", "error");
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [id, router, toast]);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/admin/products/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form,
+          images: images.map((img) => img.assetRef),
+        }),
+      });
+      if (res.ok) {
+        toast("Product updated successfully");
+        router.push("/admin/products");
+      } else {
+        toast("Failed to update product", "error");
+      }
+    } catch {
+      toast("Something went wrong", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/products/${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        toast("Product deleted");
+        router.push("/admin/products");
+      } else {
+        toast("Failed to delete product", "error");
+      }
+    } catch {
+      toast("Something went wrong", "error");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const inputClass =
+    "w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#C08A6F] transition-colors bg-white";
+
+  if (loading) {
+    return (
+        <div className="max-w-3xl space-y-6">
+          <div className="flex items-center gap-4">
+            <div className="skeleton w-5 h-5" />
+            <div className="space-y-2">
+              <div className="skeleton h-6 w-40" />
+              <div className="skeleton h-3 w-56" />
+            </div>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="skeleton h-10 w-full" />
+            ))}
+          </div>
+        </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="max-w-3xl">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 sm:mb-8">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <button onClick={() => router.back()} className="text-[#666] hover:text-[#1A1A1A] transition-colors p-1">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+              </svg>
+            </button>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-semibold text-[#1A1A1A]">Edit Product</h1>
+              <p className="text-[#666] text-sm mt-1 truncate max-w-xs">{form.name || "Untitled"}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            disabled={deleting}
+            className="text-red-500 text-xs border border-red-200 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 self-start sm:self-auto"
+          >
+            {deleting ? "Deleting..." : "Delete Product"}
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
+          {/* Basic info */}
+          <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 space-y-5">
+            <h2 className="font-medium text-[#1A1A1A] text-sm uppercase tracking-widest">Basic Information</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+              <div className="sm:col-span-2">
+                <label className="text-[#666] text-xs block mb-1.5">Product Name</label>
+                <input name="name" required value={form.name} onChange={handleChange} className={inputClass} />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="text-[#666] text-xs block mb-1.5">URL Slug</label>
+                <input name="slug" required value={form.slug} onChange={handleChange} className={inputClass + " font-mono text-xs"} />
+              </div>
+              <div>
+                <label className="text-[#666] text-xs block mb-1.5">Category</label>
+                <select name="category" value={form.category} onChange={handleChange} className={inputClass}>
+                  <option value="womenswear">Womenswear</option>
+                  <option value="menswear">Menswear</option>
+                  <option value="fabrics">Raw Fabrics</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[#666] text-xs block mb-1.5">Subcategory</label>
+                <input name="subcategory" value={form.subcategory} onChange={handleChange} className={inputClass} />
+              </div>
+              <div>
+                <label className="text-[#666] text-xs block mb-1.5">Price (USD)</label>
+                <input name="price" type="number" required value={form.price} onChange={handleChange} className={inputClass} />
+              </div>
+              <div>
+                <label className="text-[#666] text-xs block mb-1.5">Sizes (comma separated)</label>
+                <input name="sizes" value={form.sizes} onChange={handleChange} className={inputClass} />
+              </div>
+            </div>
+          </div>
+
+          {/* Description */}
+          <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 space-y-5">
+            <h2 className="font-medium text-[#1A1A1A] text-sm uppercase tracking-widest">Description</h2>
+            <textarea name="description" rows={4} value={form.description} onChange={handleChange} className={inputClass + " resize-none"} placeholder="Describe the product..." />
+            <div>
+              <label className="text-[#666] text-xs block mb-1.5">Details (one per line)</label>
+              <textarea name="details" rows={4} value={form.details} onChange={handleChange} className={inputClass + " resize-none"} />
+            </div>
+          </div>
+
+          {/* Images */}
+          <ImageUpload images={images} onImagesChange={setImages} />
+
+          {/* Status & submit */}
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <label className="text-[#666] text-xs">Status:</label>
+              <select name="status" value={form.status} onChange={handleChange} className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C08A6F] transition-colors bg-white">
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+              </select>
+            </div>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => router.back()} className="flex-1 sm:flex-none text-[#666] text-sm px-5 py-2.5 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                Cancel
+              </button>
+              <button type="submit" disabled={saving} className="flex-1 sm:flex-none bg-[#232323] text-white text-sm px-6 py-2.5 rounded-lg hover:bg-[#C08A6F] transition-colors disabled:opacity-50">
+                {saving ? "Saving..." : "Update Product"}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <ConfirmModal
+        open={showDeleteModal}
+        title="Delete Product"
+        message={`"${form.name || "This product"}" will be permanently removed from your store. This action cannot be undone.`}
+        confirmLabel={deleting ? "Deleting..." : "Delete"}
+        danger
+        loading={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteModal(false)}
+      />
+    </>
+  );
+}

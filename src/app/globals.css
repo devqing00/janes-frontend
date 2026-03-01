@@ -1,26 +1,110 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Brand Colors */
+  --color-brand-bg: #FAF8F5;
+  --color-brand-white: #FFFFFF;
+  --color-brand-text: #1A1A1A;
+  --color-brand-muted: #666666;
+  --color-brand-accent: #C08A6F;
+  --color-brand-dark: #232323;
+  --color-brand-light: #F5F0EB;
+  --color-brand-border: #E8E2DB;
+
+  /* Fonts */
+  --font-serif: var(--font-saol);
+  --font-sans: var(--font-montserrat);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #FAF8F5;
+  color: #1A1A1A;
+  font-family: var(--font-montserrat), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
+
+/* Selection color */
+::selection {
+  background-color: #C08A6F;
+  color: #FFFFFF;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #FAF8F5;
+}
+::-webkit-scrollbar-thumb {
+  background: #C08A6F;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a8755c;
+}
+
+/* Focus styles — only for non-form interactive elements (links, buttons, etc.) */
+*:focus-visible {
+  outline: 1.5px solid #C08A6F;
+  outline-offset: 2px;
+}
+/* Remove outline from form elements that handle their own focus ring via border */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+}
+
+/* Smooth image loading */
+img {
+  transition: opacity 0.4s ease;
+}
+
+/* Line decoration utility */
+.line-accent::after {
+  content: "";
+  display: block;
+  width: 48px;
+  height: 1px;
+  background-color: #C08A6F;
+  margin-top: 1.5rem;
+}
+
+/* Admin styles */
+[data-admin] {
+  background-color: #f8fafc;
+  font-family: var(--font-montserrat), system-ui, sans-serif;
+}
+
+/* Toast animation */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Skeleton loading pulse */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 0.375rem;
+}
+

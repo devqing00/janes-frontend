@@ -1,0 +1,309 @@
+"use client";
+
+import { useState } from "react";
+import useSWR from "swr";
+import Link from "next/link";
+
+interface OrderItem {
+  _key: string;
+  productId: string;
+  name: string;
+  price: number;
+  quantity: number;
+  size?: string;
+  image?: string;
+}
+
+interface Order {
+  _id: string;
+  _createdAt: string;
+  reference: string;
+  status: "pending" | "awaiting_payment" | "success" | "failed";
+  paymentMethod?: "paystack" | "bank_transfer";
+  customerName: string;
+  customerEmail: string;
+  subtotal: number;
+  currency: string;
+  items: OrderItem[];
+  shippingAddress?: {
+    line1?: string;
+    line2?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    postalCode?: string;
+  };
+  paidAt?: string;
+  shippingMethod?: {
+    name: string;
+    price: number;
+    estimatedDays?: string;
+  };
+  note?: string;
+}
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
+const STATUS_LABELS: Record<string, { label: string; classes: string }> = {
+  success: { label: "Paid", classes: "bg-green-50 text-green-700 border border-green-200" },
+  pending: { label: "Pending", classes: "bg-amber-50 text-amber-700 border border-amber-200" },
+  awaiting_payment: { label: "Awaiting Transfer", classes: "bg-orange-50 text-orange-700 border border-orange-200" },
+  failed: { label: "Failed", classes: "bg-red-50 text-red-600 border border-red-200" },
+};
+
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  paystack: "Paystack",
+  bank_transfer: "Bank Transfer",
+};
+
+export default function AdminOrdersPage() {
+  const { data: orders = [], isLoading, mutate } = useSWR<Order[]>(
+    "/api/admin/orders",
+    fetcher,
+    { revalidateOnFocus: true }
+  );
+
+  const [selected, setSelected] = useState<Order | null>(null);
+  const [filter, setFilter] = useState<"all" | "success" | "pending" | "awaiting_payment" | "failed">("all");
+
+  const filtered = filter === "all" ? orders : orders.filter((o) => o.status === filter);
+
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+
+  const formatAmount = (amount: number, currency: string) =>
+    `${currency} ${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+
+  return (
+    <div className="max-w-7xl">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-xl font-medium text-[#1A1A1A]">Orders</h1>
+          <p className="text-sm text-[#999] mt-0.5">
+            {orders.length} order{orders.length !== 1 ? "s" : ""} total
+          </p>
+        </div>
+        <button
+          onClick={() => mutate()}
+          className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] text-[#666] hover:text-[#1A1A1A] transition-colors border border-[#E8E2DB] px-3 py-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+          </svg>
+          Refresh
+        </button>
+      </div>
+
+      {/* Filter tabs */}
+      <div className="flex gap-1 mb-6 border-b border-[#E8E2DB]">
+        {(["all", "success", "pending", "awaiting_payment", "failed"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => { setFilter(tab); setSelected(null); }}
+            className={`px-4 py-2.5 text-[11px] uppercase tracking-[0.15em] border-b-2 transition-colors -mb-px ${
+              filter === tab
+                ? "border-[#C08A6F] text-[#C08A6F]"
+                : "border-transparent text-[#666] hover:text-[#1A1A1A]"
+            }`}
+          >
+            {tab === "all" ? "All" : STATUS_LABELS[tab].label}
+            {tab !== "all" && (
+              <span className="ml-1.5 text-[9px]">
+                ({orders.filter((o) => o.status === tab).length})
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {isLoading ? (
+        <div className="text-center py-16 text-[#999] text-sm">Loading orders…</div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-16 text-[#999] text-sm">No orders found.</div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Orders list */}
+          <div className="lg:col-span-2 space-y-2">
+            {filtered.map((order) => (
+              <button
+                key={order._id}
+                onClick={() => setSelected(order)}
+                className={`w-full text-left border p-4 hover:border-[#C08A6F] transition-colors ${
+                  selected?._id === order._id
+                    ? "border-[#C08A6F] bg-[#fdf9f7]"
+                    : "border-[#E8E2DB] bg-white"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm text-[#1A1A1A] truncate">
+                      {order.customerName || order.customerEmail}
+                    </p>
+                    <p className="text-[11px] text-[#999] mt-0.5 truncate">{order.customerEmail}</p>
+                    <p className="text-[10px] text-[#bbb] mt-1 font-mono">{order.reference}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                    <span
+                      className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-sm ${
+                        STATUS_LABELS[order.status]?.classes ?? "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {STATUS_LABELS[order.status]?.label ?? order.status}
+                    </span>
+                    <p className="text-sm font-medium text-[#1A1A1A]">
+                      {formatAmount(order.subtotal ?? 0, order.currency ?? "NGN")}
+                    </p>
+                    <p className="text-[10px] text-[#bbb]">{formatDate(order._createdAt)}</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Detail panel */}
+          {selected ? (
+            <div className="border border-[#E8E2DB] bg-white p-5 h-fit">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-medium text-sm text-[#1A1A1A]">Order Detail</h2>
+                <button
+                  onClick={() => setSelected(null)}
+                  className="text-[#999] hover:text-[#1A1A1A] transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-4 text-sm">
+                {/* Status + ref + payment method */}
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span
+                      className={`inline-block text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-sm ${
+                        STATUS_LABELS[selected.status]?.classes
+                      }`}
+                    >
+                      {STATUS_LABELS[selected.status]?.label}
+                    </span>
+                    {selected.paymentMethod && (
+                      <span className="inline-block text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-sm bg-[#F5F0EB] text-[#666] border border-[#E8E2DB]">
+                        {PAYMENT_METHOD_LABELS[selected.paymentMethod] ?? selected.paymentMethod}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[10px] font-mono text-[#999] break-all">{selected.reference}</p>
+                </div>
+
+                {/* Customer */}
+                <div className="border-t border-[#E8E2DB] pt-3">
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#999] mb-2">Customer</p>
+                  <p className="text-[#1A1A1A]">{selected.customerName}</p>
+                  <a
+                    href={`mailto:${selected.customerEmail}`}
+                    className="text-[#C08A6F] hover:underline text-[11px]"
+                  >
+                    {selected.customerEmail}
+                  </a>
+                </div>
+
+                {/* Dates */}
+                <div className="border-t border-[#E8E2DB] pt-3 space-y-1">
+                  <div className="flex justify-between text-[11px]">
+                    <span className="text-[#999]">Placed</span>
+                    <span>{formatDate(selected._createdAt)}</span>
+                  </div>
+                  {selected.paidAt && (
+                    <div className="flex justify-between text-[11px]">
+                      <span className="text-[#999]">Paid</span>
+                      <span>{formatDate(selected.paidAt)}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Items */}
+                <div className="border-t border-[#E8E2DB] pt-3">
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#999] mb-2">Items</p>
+                  <div className="space-y-2">
+                    {(selected.items ?? []).map((item, i) => (
+                      <div key={item._key ?? i} className="flex justify-between items-start gap-2 text-[12px]">
+                        <div className="min-w-0">
+                          <p className="text-[#1A1A1A] truncate">{item.name}</p>
+                          {item.size && <p className="text-[#999] text-[10px]">Size: {item.size}</p>}
+                          <p className="text-[#999] text-[10px]">Qty: {item.quantity}</p>
+                        </div>
+                        <p className="text-[#1A1A1A] flex-shrink-0">
+                          {(item.price * item.quantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Total */}
+                <div className="border-t border-[#E8E2DB] pt-3 flex justify-between">
+                  <span className="font-medium text-[#1A1A1A]">Total</span>
+                  <span className="font-medium text-[#1A1A1A]">
+                    {formatAmount(selected.subtotal ?? 0, selected.currency ?? "NGN")}
+                  </span>
+                </div>
+
+                {/* Shipping address */}
+                {selected.shippingAddress && (
+                  <div className="border-t border-[#E8E2DB] pt-3">
+                    <p className="text-[10px] uppercase tracking-[0.15em] text-[#999] mb-2">
+                      Ship to
+                    </p>
+                    <address className="not-italic text-[12px] text-[#1A1A1A] space-y-0.5">
+                      {selected.shippingAddress.line1 && <p>{selected.shippingAddress.line1}</p>}
+                      {selected.shippingAddress.line2 && <p>{selected.shippingAddress.line2}</p>}
+                      {selected.shippingAddress.city && (
+                        <p>
+                          {selected.shippingAddress.city}
+                          {selected.shippingAddress.state ? `, ${selected.shippingAddress.state}` : ""}
+                          {selected.shippingAddress.postalCode ? ` ${selected.shippingAddress.postalCode}` : ""}
+                        </p>
+                      )}
+                      {selected.shippingAddress.country && <p>{selected.shippingAddress.country}</p>}
+                    </address>
+                  </div>
+                )}
+
+                {/* Shipping method */}
+                {selected.shippingMethod && (
+                  <div className="border-t border-[#E8E2DB] pt-3">
+                    <p className="text-[10px] uppercase tracking-[0.15em] text-[#999] mb-2">Shipping Method</p>
+                    <div className="flex items-center justify-between text-[12px]">
+                      <span className="text-[#1A1A1A] font-medium">{selected.shippingMethod.name}</span>
+                      <span className="text-[#666]">{formatAmount(selected.shippingMethod.price, selected.currency ?? "NGN")}</span>
+                    </div>
+                    {selected.shippingMethod.estimatedDays && (
+                      <p className="text-[11px] text-[#bbb] mt-0.5 uppercase tracking-wide">{selected.shippingMethod.estimatedDays}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Customer note */}
+                {selected.note && (
+                  <div className="border-t border-[#E8E2DB] pt-3">
+                    <p className="text-[10px] uppercase tracking-[0.15em] text-[#C08A6F] mb-2">Note from Customer</p>
+                    <p className="text-[12px] text-[#666] italic leading-relaxed">&ldquo;{selected.note}&rdquo;</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="border border-dashed border-[#E8E2DB] flex items-center justify-center h-48 text-[#bbb] text-sm hidden lg:flex">
+              Select an order to view details
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

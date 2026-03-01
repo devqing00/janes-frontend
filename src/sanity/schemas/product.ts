@@ -50,6 +50,12 @@ const product = {
       type: "number",
     },
     {
+      name: "comparePrice",
+      title: "Compare-at Price",
+      type: "number",
+      description: "Original price before discount. Leave empty if not on sale.",
+    },
+    {
       name: "images",
       title: "Images",
       type: "array",

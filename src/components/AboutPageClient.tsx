@@ -189,7 +189,7 @@ export default function AboutPageClient() {
               declaration of self.&rdquo;
             </blockquote>
             <p className="text-brand-muted text-sm mt-8 uppercase tracking-widest">
-              — Jane Adeyemi, Creative Director
+              — Jane Stitches, Creative Director
             </p>
           </motion.div>
         </div>

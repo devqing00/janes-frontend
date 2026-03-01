@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearch } from "./SearchProvider";
+import { useSiteSettings } from "./SiteSettingsProvider";
 
 interface SearchResult {
   _id: string;
@@ -17,6 +18,7 @@ interface SearchResult {
 
 export default function SearchOverlay() {
   const { isOpen, closeSearch } = useSearch();
+  const { formatPrice } = useSiteSettings();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -196,7 +198,7 @@ export default function SearchOverlay() {
                         {categoryLabels[product.category] || product.category}
                       </p>
                     </div>
-                    <p className="text-white/60 text-sm">${product.price}</p>
+                    <p className="text-white/60 text-sm">{formatPrice(product.price)}</p>
                   </Link>
                 ))}
               </div>

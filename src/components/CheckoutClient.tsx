@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "./CartProvider";
+import { useSiteSettings } from "./SiteSettingsProvider";
 
 interface ShippingRate {
   _key?: string;
@@ -34,8 +35,6 @@ interface DeliveryForm {
 type DeliveryStep = "empty" | "editing" | "done";
 type ShippingStep = "empty" | "selecting" | "done";
 type PaymentMethodKey = "paystack" | "bank_transfer";
-
-const fmtPrice = (n: number) => n.toLocaleString(undefined, { minimumFractionDigits: 2 });
 
 const EMPTY_DELIVERY: DeliveryForm = {
   name: "", line1: "", line2: "", city: "", state: "", country: "", postalCode: "",
@@ -101,6 +100,8 @@ const PAYMENT_METHODS: Record<PaymentMethodKey, { label: string; desc: string; i
 export default function CheckoutClient() {
   const { items, total } = useCart();
   const router = useRouter();
+  const { formatPrice } = useSiteSettings();
+  const fmtPrice = (n: number) => formatPrice(n);
 
   const [email, setEmail] = useState("");
   const [deliveryStep, setDeliveryStep] = useState<DeliveryStep>("empty");

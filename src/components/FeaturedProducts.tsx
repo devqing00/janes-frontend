@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useSiteSettings } from "./SiteSettingsProvider";
 
 interface FeaturedProduct {
   _id: string;
@@ -18,6 +19,7 @@ interface FeaturedProduct {
 export default function FeaturedProducts() {
   const [products, setProducts] = useState<FeaturedProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const { formatPrice } = useSiteSettings();
 
   useEffect(() => {
     async function fetchFeatured() {
@@ -119,7 +121,7 @@ export default function FeaturedProducts() {
                   </div>
                   <div className="mt-4">
                     <h3 className="text-[#1A1A1A] text-sm font-medium">{item.name}</h3>
-                    <p className="text-[#666] text-sm mt-1">${item.price}</p>
+                    <p className="text-[#666] text-sm mt-1">{formatPrice(item.price)}</p>
                   </div>
                 </Link>
               </motion.div>

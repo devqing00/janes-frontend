@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import PageHero from "@/components/PageHero";
 import { useWishlist } from "@/components/WishlistProvider";
 import { useCart } from "@/components/CartProvider";
+import { useSiteSettings } from "@/components/SiteSettingsProvider";
 
 const categoryLabels: Record<string, string> = {
   womenswear: "Womenswear",
@@ -16,6 +17,7 @@ const categoryLabels: Record<string, string> = {
 export default function WishlistPage() {
   const { items, removeItem } = useWishlist();
   const { addItem } = useCart();
+  const { formatPrice } = useSiteSettings();
 
   const handleAddToBag = (item: typeof items[0]) => {
     addItem({
@@ -93,7 +95,7 @@ export default function WishlistPage() {
                       <Link href={`/shop/${item.slug}`}>
                         <p className="text-brand-text text-sm hover:text-[#C08A6F] transition-colors">{item.name}</p>
                       </Link>
-                      <p className="text-brand-text font-medium text-sm mt-1">${item.price}</p>
+                      <p className="text-brand-text font-medium text-sm mt-1">{formatPrice(item.price)}</p>
                       <button
                         onClick={() => handleAddToBag(item)}
                         className="mt-3 w-full bg-[#232323] text-white uppercase text-[9px] tracking-[0.15em] py-2.5 hover:bg-[#C08A6F] transition-colors"

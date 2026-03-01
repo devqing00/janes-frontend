@@ -11,6 +11,13 @@ type RecentProduct = {
   status: string;
 };
 
+type OrderSummary = {
+  _id: string;
+  status: string;
+  subtotal: number;
+  currency: string;
+};
+
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export default function AdminDashboardPage() {
@@ -29,10 +36,18 @@ export default function AdminDashboardPage() {
     fetcher,
     { revalidateOnFocus: true }
   );
+  const { data: orders = [], isLoading: ordersLoading } = useSWR<OrderSummary[]>(
+    "/api/admin/orders",
+    fetcher,
+    { revalidateOnFocus: true }
+  );
 
-  const loading = productsLoading || collectionsLoading;
+  const loading = productsLoading || collectionsLoading || ordersLoading;
   const published = products.filter((p) => p.status === "published").length;
   const unread = Array.isArray(messages) ? messages.filter((m) => !m.read).length : 0;
+  const paidOrders = Array.isArray(orders) ? orders.filter((o) => o.status === "success" || o.status === "delivered") : [];
+  const revenue = paidOrders.reduce((sum, o) => sum + (o.subtotal || 0), 0);
+  const revenueCurrency = paidOrders[0]?.currency || "NGN";
 
   const stats = loading ? null : {
     products: products.length,
@@ -40,6 +55,8 @@ export default function AdminDashboardPage() {
     published,
     drafts: products.length - published,
     unread,
+    orders: Array.isArray(orders) ? orders.length : 0,
+    revenue,
   };
 
   const recent = products.slice(0, 5);
@@ -48,8 +65,8 @@ export default function AdminDashboardPage() {
     ? [
         { label: "Products", value: stats.products, href: "/admin/products" },
         { label: "Collections", value: stats.collections, href: "/admin/collections" },
-        { label: "Published", value: stats.published, href: "/admin/products" },
-        { label: "Drafts", value: stats.drafts, href: "/admin/products" },
+        { label: "Orders", value: stats.orders, href: "/admin/orders" },
+        { label: "Revenue", value: `${revenueCurrency} ${revenue.toLocaleString()}`, href: "/admin/orders" },
         { label: "Unread Messages", value: stats.unread, href: "/admin/messages" },
       ]
     : [];

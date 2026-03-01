@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { useSiteSettings } from "./SiteSettingsProvider";
 
 const footerLinks = {
   shop: [
@@ -24,13 +25,39 @@ const footerLinks = {
   ],
 };
 
-const socials = [
-  { label: "Instagram", href: "#" },
-  { label: "Pinterest", href: "#" },
-  { label: "Twitter", href: "#" },
-];
+const socials: { label: string; href: string }[] = [];
 
 export default function Footer() {
+  const [nlEmail, setNlEmail] = useState("");
+  const [nlStatus, setNlStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const { instagramUrl } = useSiteSettings();
+
+  const dynamicSocials = [
+    ...(instagramUrl ? [{ label: "Instagram", href: instagramUrl }] : []),
+    ...socials,
+  ];
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nlEmail.includes("@")) return;
+    setNlStatus("loading");
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: nlEmail }),
+      });
+      if (res.ok) {
+        setNlStatus("success");
+        setNlEmail("");
+      } else {
+        setNlStatus("error");
+      }
+    } catch {
+      setNlStatus("error");
+    }
+  };
+
   return (
     <footer className="bg-[#232323] text-white">
       {/* Newsletter band */}
@@ -50,30 +77,43 @@ export default function Footer() {
               </h3>
             </div>
             <div className="col-span-12 md:col-span-6 md:col-start-7">
-              <form
-                onSubmit={(e) => e.preventDefault()}
-                className="flex flex-col md:flex-row items-stretch md:items-end gap-4 pr-6 md:pr-0"
-              >
-                <div className="flex-1">
-                  <label className="text-white/30 uppercase text-[9px] tracking-widest block mb-2">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="your@email.com"
-                    className="w-full bg-transparent border-b border-white/20 pb-3 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-[#C08A6F] transition-colors"
-                  />
+              {nlStatus === "success" ? (
+                <div className="py-4">
+                  <p className="text-[#C08A6F] text-sm">Thank you for subscribing!</p>
+                  <p className="text-white/30 text-xs mt-1">You&apos;ll hear from us soon.</p>
                 </div>
-                <button
-                  type="submit"
-                  className="bg-[#C08A6F] text-white uppercase text-[10px] tracking-[0.2em] px-6 py-3 hover:bg-[#C08A6F]/90 transition-all shrink-0"
-                >
-                  Subscribe
-                </button>
-              </form>
-              <p className="text-white/20 text-[10px] mt-3">
-                No spam. Unsubscribe at any time.
-              </p>
+              ) : (
+                <>
+                  <form
+                    onSubmit={handleNewsletterSubmit}
+                    className="flex flex-col md:flex-row items-stretch md:items-end gap-4 pr-6 md:pr-0"
+                  >
+                    <div className="flex-1">
+                      <label className="text-white/30 uppercase text-[9px] tracking-widest block mb-2">
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        value={nlEmail}
+                        onChange={(e) => setNlEmail(e.target.value)}
+                        placeholder="your@email.com"
+                        required
+                        className="w-full bg-transparent border-b border-white/20 pb-3 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-[#C08A6F] transition-colors"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={nlStatus === "loading"}
+                      className="bg-[#C08A6F] text-white uppercase text-[10px] tracking-[0.2em] px-6 py-3 hover:bg-[#C08A6F]/90 transition-all shrink-0 disabled:opacity-50"
+                    >
+                      {nlStatus === "loading" ? "Subscribing..." : "Subscribe"}
+                    </button>
+                  </form>
+                  <p className="text-white/20 text-[10px] mt-3">
+                    {nlStatus === "error" ? "Something went wrong. Please try again." : "No spam. Unsubscribe at any time."}
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -95,10 +135,12 @@ export default function Footer() {
               and purpose. Designed for the modern individual.
             </p>
             <div className="flex gap-5 mt-6">
-              {socials.map((s) => (
+              {dynamicSocials.map((s) => (
                 <a
                   key={s.label}
                   href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-white/40 text-[10px] uppercase tracking-widest hover:text-[#C08A6F] transition-colors"
                 >
                   {s.label}

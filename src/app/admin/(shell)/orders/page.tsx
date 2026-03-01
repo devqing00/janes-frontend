@@ -18,7 +18,7 @@ interface Order {
   _id: string;
   _createdAt: string;
   reference: string;
-  status: "pending" | "awaiting_payment" | "success" | "failed";
+  status: "pending" | "awaiting_payment" | "success" | "failed" | "processing" | "shipped" | "delivered";
   paymentMethod?: "paystack" | "bank_transfer";
   customerName: string;
   customerEmail: string;
@@ -49,6 +49,9 @@ const STATUS_LABELS: Record<string, { label: string; classes: string }> = {
   pending: { label: "Pending", classes: "bg-amber-50 text-amber-700 border border-amber-200" },
   awaiting_payment: { label: "Awaiting Transfer", classes: "bg-orange-50 text-orange-700 border border-orange-200" },
   failed: { label: "Failed", classes: "bg-red-50 text-red-600 border border-red-200" },
+  processing: { label: "Processing", classes: "bg-blue-50 text-blue-700 border border-blue-200" },
+  shipped: { label: "Shipped", classes: "bg-indigo-50 text-indigo-700 border border-indigo-200" },
+  delivered: { label: "Delivered", classes: "bg-emerald-50 text-emerald-700 border border-emerald-200" },
 };
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
@@ -65,6 +68,29 @@ export default function AdminOrdersPage() {
 
   const [selected, setSelected] = useState<Order | null>(null);
   const [filter, setFilter] = useState<"all" | "success" | "pending" | "awaiting_payment" | "failed">("all");
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+    setUpdatingStatus(true);
+    try {
+      const res = await fetch("/api/admin/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, status: newStatus }),
+      });
+      if (res.ok) {
+        // Update local state
+        if (selected && selected._id === orderId) {
+          setSelected({ ...selected, status: newStatus as Order["status"] });
+        }
+        mutate();
+      }
+    } catch {
+      // silent fail
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
 
   const filtered = filter === "all" ? orders : orders.filter((o) => o.status === filter);
 
@@ -295,6 +321,24 @@ export default function AdminOrdersPage() {
                     <p className="text-[12px] text-[#666] italic leading-relaxed">&ldquo;{selected.note}&rdquo;</p>
                   </div>
                 )}
+
+                {/* Status update */}
+                <div className="border-t border-[#E8E2DB] pt-3">
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#999] mb-2">Update Status</p>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={selected.status}
+                      onChange={(e) => handleStatusUpdate(selected._id, e.target.value)}
+                      disabled={updatingStatus}
+                      className="flex-1 border border-[#E8E2DB] rounded px-3 py-2 text-sm focus:outline-none focus:border-[#C08A6F] transition-colors disabled:opacity-50"
+                    >
+                      {Object.entries(STATUS_LABELS).map(([value, { label }]) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
+                    </select>
+                    {updatingStatus && <span className="text-[#999] text-xs">Saving…</span>}
+                  </div>
+                </div>
               </div>
             </div>
           ) : (

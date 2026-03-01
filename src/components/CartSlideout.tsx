@@ -4,9 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "./CartProvider";
+import { useSiteSettings } from "./SiteSettingsProvider";
 
 export default function CartSlideout() {
   const { items, removeItem, updateQuantity, clearCart, itemCount, total, isOpen, closeCart } = useCart();
+  const { formatPrice } = useSiteSettings();
 
   return (
     <AnimatePresence>
@@ -105,7 +107,7 @@ export default function CartSlideout() {
                         {item.size && (
                           <p className="text-[#666] text-xs mt-0.5">Size: {item.size}</p>
                         )}
-                        <p className="text-[#1A1A1A] text-sm mt-1">${item.price}</p>
+                        <p className="text-[#1A1A1A] text-sm mt-1">{formatPrice(item.price)}</p>
 
                         {/* Quantity + remove */}
                         <div className="flex items-center justify-between mt-2">
@@ -145,7 +147,7 @@ export default function CartSlideout() {
               <div className="border-t border-[#E8E2DB] px-6 py-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-[#666] text-sm">Subtotal</span>
-                  <span className="text-[#1A1A1A] text-lg font-medium">${total.toFixed(2)}</span>
+                  <span className="text-[#1A1A1A] text-lg font-medium">{formatPrice(total)}</span>
                 </div>
                 <p className="text-[#666] text-[10px]">Shipping & taxes calculated at checkout.</p>
                 <Link

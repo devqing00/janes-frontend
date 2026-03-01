@@ -77,7 +77,7 @@ export default function Navbar() {
   };
 
   const handleMouseLeave = () => {
-    dropdownTimeout.current = setTimeout(() => setActiveDropdown(null), 150);
+    dropdownTimeout.current = setTimeout(() => setActiveDropdown(null), 200);
   };
 
   return (
@@ -153,7 +153,7 @@ export default function Navbar() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -4 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute top-full left-0 pt-3"
+                        className="absolute top-full left-0 pt-1"
                         onMouseEnter={() => handleMouseEnter(link.label)}
                         onMouseLeave={handleMouseLeave}
                       >

@@ -4,7 +4,9 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import PageHero from "@/components/PageHero";
+import { useSiteSettings } from "@/components/SiteSettingsProvider";
 
 const categories = ["All", "womenswear", "menswear", "fabrics"] as const;
 const categoryLabels: Record<string, string> = {
@@ -32,6 +34,8 @@ interface Product {
   category: string;
   subcategory?: string;
   price: number;
+  comparePrice?: number;
+  inStock?: boolean;
   image: string | null;
   featured?: boolean;
 }
@@ -51,10 +55,22 @@ const cardVariants = {
 };
 
 export default function ShopPageClient() {
-  const [activeCategory, setActiveCategory] = useState<string>("All");
+  const searchParams = useSearchParams();
+  const urlCategory = searchParams.get("category") || "All";
+  const [activeCategory, setActiveCategory] = useState<string>(urlCategory);
   const [activeSub, setActiveSub] = useState<string>("All");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(12);
+  const { formatPrice } = useSiteSettings();
+
+  // Sync category from URL on mount
+  useEffect(() => {
+    const cat = searchParams.get("category") || "All";
+    if (cat !== "All" && categories.includes(cat as typeof categories[number])) {
+      setActiveCategory(cat);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     async function fetchProducts() {
@@ -80,6 +96,9 @@ export default function ShopPageClient() {
       activeSub === "All" || p.subcategory === activeSub;
     return catMatch && subMatch;
   });
+
+  const paginatedProducts = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
 
   return (
     <>
@@ -158,47 +177,80 @@ export default function ShopPageClient() {
               key={activeCategory + activeSub}
               variants={containerVariants}
             >
-              {filtered.map((item) => (
-                <motion.div key={item._id} variants={cardVariants}>
-                  <Link href={`/shop/${item.slug}`} className="group block">
-                    <div className="relative overflow-hidden bg-brand-light aspect-[3/4]">
-                      {item.image ? (
-                        <Image
-                          src={item.image}
-                          alt={item.name}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-700"
-                          sizes="(max-width: 768px) 45vw, (max-width: 1024px) 30vw, 22vw"
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center text-brand-muted text-xs">
-                          No Image
+              {paginatedProducts.map((item) => {
+                const onSale = item.comparePrice && item.comparePrice > item.price;
+                const outOfStock = item.inStock === false;
+                return (
+                  <motion.div key={item._id} variants={cardVariants}>
+                    <Link href={`/shop/${item.slug}`} className="group block">
+                      <div className="relative overflow-hidden bg-brand-light aspect-[3/4]">
+                        {item.image ? (
+                          <Image
+                            src={item.image}
+                            alt={item.name}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-700"
+                            sizes="(max-width: 768px) 45vw, (max-width: 1024px) 30vw, 22vw"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-brand-muted text-xs">
+                            No Image
+                          </div>
+                        )}
+                        {outOfStock && (
+                          <span className="absolute top-3 left-3 bg-[#232323] text-white uppercase text-[8px] tracking-[0.15em] px-3 py-1.5">
+                            Sold Out
+                          </span>
+                        )}
+                        {!outOfStock && onSale && (
+                          <span className="absolute top-3 left-3 bg-[#C08A6F] text-white uppercase text-[8px] tracking-[0.15em] px-3 py-1.5">
+                            Sale
+                          </span>
+                        )}
+                        {!outOfStock && !onSale && item.featured && (
+                          <span className="absolute top-3 left-3 bg-[#232323] text-white uppercase text-[8px] tracking-[0.15em] px-3 py-1.5">
+                            Featured
+                          </span>
+                        )}
+                        <div className="absolute bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-sm translate-y-full group-hover:translate-y-0 transition-transform duration-500">
+                          <span className="uppercase text-[10px] tracking-[0.15em] text-[#1A1A1A]">
+                            Quick View
+                          </span>
                         </div>
-                      )}
-                      {item.featured && (
-                        <span className="absolute top-3 left-3 bg-[#232323] text-white uppercase text-[8px] tracking-[0.15em] px-3 py-1.5">
-                          Featured
-                        </span>
-                      )}
-                      <div className="absolute bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-sm translate-y-full group-hover:translate-y-0 transition-transform duration-500">
-                        <span className="uppercase text-[10px] tracking-[0.15em] text-[#1A1A1A]">
-                          Quick View
-                        </span>
                       </div>
-                    </div>
-                    <div className="mt-4">
-                      <p className="text-brand-muted uppercase text-[9px] tracking-widest">
-                        {categoryLabels[item.category] || item.category}
-                      </p>
-                      <p className="text-brand-text text-sm mt-1">{item.name}</p>
-                      <p className="text-brand-text font-medium text-sm mt-1">
-                        ${item.price}
-                      </p>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
+                      <div className="mt-4">
+                        <p className="text-brand-muted uppercase text-[9px] tracking-widest">
+                          {categoryLabels[item.category] || item.category}
+                        </p>
+                        <p className="text-brand-text text-sm mt-1">{item.name}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <p className={`text-sm font-medium ${onSale ? "text-[#C08A6F]" : "text-brand-text"}`}>
+                            {formatPrice(item.price)}
+                          </p>
+                          {onSale && (
+                            <p className="text-[#999] text-sm line-through">
+                              {formatPrice(item.comparePrice!)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                );
+              })}
             </motion.div>
+          )}
+
+          {/* Load more button */}
+          {!loading && hasMore && (
+            <div className="text-center mt-12">
+              <button
+                onClick={() => setVisibleCount((prev) => prev + 12)}
+                className="inline-block uppercase text-[10px] tracking-[0.2em] text-[#1A1A1A] border border-[#1A1A1A]/20 px-10 py-3.5 hover:border-[#C08A6F] hover:text-[#C08A6F] transition-colors"
+              >
+                Load More ({filtered.length - visibleCount} remaining)
+              </button>
+            </div>
           )}
 
           {!loading && filtered.length === 0 && (

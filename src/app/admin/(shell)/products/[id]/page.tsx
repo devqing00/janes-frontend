@@ -15,6 +15,7 @@ export default function EditProductPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [form, setForm] = useState({
@@ -124,6 +125,34 @@ export default function EditProductPage() {
     }
   };
 
+  const handleDuplicate = async () => {
+    setDuplicating(true);
+    try {
+      const res = await fetch("/api/admin/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form,
+          name: `${form.name} (Copy)`,
+          slug: `${form.slug}-copy-${Date.now()}`,
+          status: "draft",
+          images: images.map((img) => img.assetRef),
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        toast("Product duplicated");
+        router.push(`/admin/products/${data._id}`);
+      } else {
+        toast("Failed to duplicate product", "error");
+      }
+    } catch {
+      toast("Something went wrong", "error");
+    } finally {
+      setDuplicating(false);
+    }
+  };
+
   const inputClass =
     "w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#C08A6F] transition-colors bg-white";
 
@@ -162,13 +191,22 @@ export default function EditProductPage() {
               <p className="text-[#666] text-sm mt-1 truncate max-w-xs">{form.name || "Untitled"}</p>
             </div>
           </div>
-          <button
-            onClick={() => setShowDeleteModal(true)}
-            disabled={deleting}
-            className="text-red-500 text-xs border border-red-200 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 self-start sm:self-auto"
-          >
-            {deleting ? "Deleting..." : "Delete Product"}
-          </button>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <button
+              onClick={handleDuplicate}
+              disabled={duplicating}
+              className="text-[#666] text-xs border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              {duplicating ? "Duplicating..." : "Duplicate"}
+            </button>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              disabled={deleting}
+              className="text-red-500 text-xs border border-red-200 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
+            >
+              {deleting ? "Deleting..." : "Delete Product"}
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">

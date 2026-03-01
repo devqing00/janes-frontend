@@ -7,15 +7,17 @@ export async function GET(request: Request) {
   const featured = searchParams.get("featured");
   const search = searchParams.get("q");
   const slug = searchParams.get("slug");
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const limit = parseInt(searchParams.get("limit") || "0", 10);
 
   try {
     let query: string;
-    let params: Record<string, string> = {};
+    let params: Record<string, string | number> = {};
 
     if (slug) {
       // Single product by slug
       query = `*[_type == "product" && slug.current == $slug && status == "published"][0] {
-        _id, name, "slug": slug.current, price, category, subcategory, description, details, sizes, status, featured,
+        _id, name, "slug": slug.current, price, comparePrice, inStock, category, subcategory, description, details, sizes, status, featured,
         "images": images[].asset->{ _id, url }
       }`;
       params = { slug };
@@ -27,27 +29,41 @@ export async function GET(request: Request) {
         subcategory match $search ||
         description match $search
       )] | order(_createdAt desc) {
-        _id, name, "slug": slug.current, price, category, subcategory, featured,
+        _id, name, "slug": slug.current, price, comparePrice, inStock, category, subcategory, featured,
         "image": images[0].asset->url
       }`;
       params = { search: `${search}*` };
     } else if (featured === "true") {
       // Featured products only
       query = `*[_type == "product" && status == "published" && featured == true] | order(_createdAt desc)[0...8] {
-        _id, name, "slug": slug.current, price, category, featured,
+        _id, name, "slug": slug.current, price, comparePrice, inStock, category, featured,
         "image": images[0].asset->url
       }`;
     } else if (category && category !== "All") {
       // Filter by category
       query = `*[_type == "product" && status == "published" && category == $category] | order(_createdAt desc) {
-        _id, name, "slug": slug.current, price, category, subcategory, featured,
+        _id, name, "slug": slug.current, price, comparePrice, inStock, category, subcategory, featured,
         "image": images[0].asset->url
       }`;
       params = { category };
     } else {
-      // All published products
+      // All published products (with optional pagination)
+      if (limit > 0) {
+        const start = (page - 1) * limit;
+        const end = start + limit;
+        // Get total count and paginated results
+        const total = await client.fetch(`count(*[_type == "product" && status == "published"])`);
+        const products = await client.fetch(
+          `*[_type == "product" && status == "published"] | order(_createdAt desc)[$start...$end] {
+            _id, name, "slug": slug.current, price, comparePrice, inStock, category, subcategory, featured,
+            "image": images[0].asset->url
+          }`,
+          { start, end }
+        );
+        return NextResponse.json({ products, total, page, limit });
+      }
       query = `*[_type == "product" && status == "published"] | order(_createdAt desc) {
-        _id, name, "slug": slug.current, price, category, subcategory, featured,
+        _id, name, "slug": slug.current, price, comparePrice, inStock, category, subcategory, featured,
         "image": images[0].asset->url
       }`;
     }

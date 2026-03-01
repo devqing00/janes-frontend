@@ -3,5 +3,6 @@ import collection from "./collection";
 import siteSettings from "./siteSettings";
 import contactMessage from "./contactMessage";
 import order from "./order";
+import newsletterSubscriber from "./newsletterSubscriber";
 
-export const schemaTypes = [product, collection, siteSettings, contactMessage, order];
+export const schemaTypes = [product, collection, siteSettings, contactMessage, order, newsletterSubscriber];

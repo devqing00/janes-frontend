@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import ShopPageClient from "@/components/ShopPageClient";
 
 export const metadata = {
@@ -6,5 +7,9 @@ export const metadata = {
 };
 
 export default function ShopPage() {
-  return <ShopPageClient />;
+  return (
+    <Suspense>
+      <ShopPageClient />
+    </Suspense>
+  );
 }

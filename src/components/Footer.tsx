@@ -29,7 +29,9 @@ const socials: { label: string; href: string }[] = [];
 
 export default function Footer() {
   const [nlEmail, setNlEmail] = useState("");
-  const [nlStatus, setNlStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [nlStatus, setNlStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
   const { instagramUrl } = useSiteSettings();
 
   const dynamicSocials = [
@@ -59,7 +61,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-[#232323] text-white">
+    <footer className="bg-[#232323] text-white overflow-hidden">
       {/* Newsletter band */}
       <div className="border-b border-white/10">
         <div className="mx-auto max-w-[1440px] px-6 md:px-12 py-16 md:py-20">
@@ -69,26 +71,30 @@ export default function Footer() {
                 Stay Connected
               </p>
               <h3 className="font-serif text-2xl md:text-3xl leading-snug">
-                Join our world of{" "}
+                Be part of{" "}
                 <span className="italic font-normal text-[#C08A6F]">
                   timeless
                 </span>{" "}
                 fashion
               </h3>
             </div>
-            <div className="col-span-12 md:col-span-6 md:col-start-7">
+            <div className="col-span-12 md:col-span-6 md:col-start-7 min-w-0">
               {nlStatus === "success" ? (
                 <div className="py-4">
-                  <p className="text-[#C08A6F] text-sm">Thank you for subscribing!</p>
-                  <p className="text-white/30 text-xs mt-1">You&apos;ll hear from us soon.</p>
+                  <p className="text-[#C08A6F] text-sm">
+                    Thank you for subscribing!
+                  </p>
+                  <p className="text-white/30 text-xs mt-1">
+                    You&apos;ll hear from us soon.
+                  </p>
                 </div>
               ) : (
                 <>
                   <form
                     onSubmit={handleNewsletterSubmit}
-                    className="flex flex-col md:flex-row items-stretch md:items-end gap-4 pr-6 md:pr-0"
+                    className="flex flex-col md:flex-row items-start md:items-end gap-4"
                   >
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <label className="text-white/30 uppercase text-[9px] tracking-widest block mb-2">
                         Email Address
                       </label>
@@ -110,7 +116,9 @@ export default function Footer() {
                     </button>
                   </form>
                   <p className="text-white/20 text-[10px] mt-3">
-                    {nlStatus === "error" ? "Something went wrong. Please try again." : "No spam. Unsubscribe at any time."}
+                    {nlStatus === "error"
+                      ? "Something went wrong. Please try again."
+                      : "No spam. Unsubscribe at any time."}
                   </p>
                 </>
               )}

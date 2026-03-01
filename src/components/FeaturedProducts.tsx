@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useSiteSettings } from "./SiteSettingsProvider";
+import { useWishlist } from "./WishlistProvider";
 
 interface FeaturedProduct {
   _id: string;
@@ -14,12 +15,22 @@ interface FeaturedProduct {
   image: string | null;
   featured?: boolean;
   category?: string;
+  _createdAt?: string;
+}
+
+const NEW_THRESHOLD_DAYS = 30;
+
+function isNew(createdAt?: string): boolean {
+  if (!createdAt) return false;
+  const diff = Date.now() - new Date(createdAt).getTime();
+  return diff < NEW_THRESHOLD_DAYS * 24 * 60 * 60 * 1000;
 }
 
 export default function FeaturedProducts() {
   const [products, setProducts] = useState<FeaturedProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const { formatPrice } = useSiteSettings();
+  const { toggleItem, isInWishlist } = useWishlist();
 
   useEffect(() => {
     async function fetchFeatured() {
@@ -107,12 +118,28 @@ export default function FeaturedProducts() {
                         No Image
                       </div>
                     )}
-                    {item.featured && (
-                      <span className="absolute top-3 left-3 bg-[#232323] text-white uppercase text-[8px] tracking-[0.15em] px-3 py-1.5">
-                        Featured
-                      </span>
-                    )}
-                    {/* Quick add overlay */}
+                    {/* Badges */}
+                    <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+                      {isNew(item._createdAt) && (
+                        <span className="bg-[#C08A6F] text-white uppercase text-[8px] tracking-[0.15em] px-3 py-1.5">
+                          New
+                        </span>
+                      )}
+                    </div>
+                    {/* Wishlist button */}
+                    <button
+                      aria-label={isInWishlist(item._id) ? "Remove from wishlist" : "Add to wishlist"}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        toggleItem({ _id: item._id, name: item.name, slug: item.slug, price: item.price, image: item.image });
+                      }}
+                      className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-white"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-4 h-4 transition-colors ${isInWishlist(item._id) ? "fill-[#C08A6F] stroke-[#C08A6F]" : "fill-none stroke-[#1A1A1A]"}`}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                      </svg>
+                    </button>
+                    {/* Quick view overlay */}
                     <div className="absolute bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-sm translate-y-full group-hover:translate-y-0 transition-transform duration-500">
                       <span className="uppercase text-[10px] tracking-[0.15em] text-[#1A1A1A]">
                         Quick View

@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     } else if (featured === "true") {
       // Featured products only
       query = `*[_type == "product" && status == "published" && featured == true] | order(_createdAt desc)[0...8] {
-        _id, name, "slug": slug.current, price, comparePrice, inStock, category, featured,
+        _id, name, "slug": slug.current, price, comparePrice, inStock, category, featured, _createdAt,
         "image": images[0].asset->url
       }`;
     } else if (category && category !== "All") {

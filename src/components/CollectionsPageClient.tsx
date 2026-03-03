@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import PageHero from "@/components/PageHero";
+import { useLocale } from "@/components/LocaleProvider";
 
 interface Collection {
   _id: string;
@@ -27,6 +28,7 @@ const fadeUp = {
 };
 
 export default function CollectionsPageClient() {
+  const { t } = useLocale();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -50,9 +52,9 @@ export default function CollectionsPageClient() {
   return (
     <>
       <PageHero
-        title="Collections"
-        subtitle="Seasonal Archives"
-        description="Each collection is a chapter in our ongoing story — explore the evolution of JANES across seasons."
+        title={t("collections.title")}
+        subtitle={t("collections.subtitle")}
+        description={t("collections.description")}
       />
 
       <section className="bg-brand-bg">
@@ -78,7 +80,7 @@ export default function CollectionsPageClient() {
 
         {!loading && collections.length === 0 && (
           <div className="py-24 md:py-36 text-center">
-            <p className="text-brand-muted text-sm">No collections available yet.</p>
+            <p className="text-brand-muted text-sm">{t("collections.empty")}</p>
           </div>
         )}
 
@@ -110,7 +112,7 @@ export default function CollectionsPageClient() {
                     variants={fadeUp}
                   >
                     <p className="text-brand-muted uppercase text-[10px] tracking-widest mb-4">
-                      Collection {String(idx + 1).padStart(2, "0")}
+                      {t("collections.collectionLabel")} {String(idx + 1).padStart(2, "0")}
                     </p>
                     <h2 className="font-serif text-brand-text text-4xl sm:text-5xl md:text-6xl leading-[1.05]">
                       {col.title}
@@ -124,7 +126,7 @@ export default function CollectionsPageClient() {
                       href={`/collections/${col.slug}`}
                       className="inline-block mt-8 bg-brand-accent text-white uppercase text-[10px] tracking-[0.2em] px-8 py-3 hover:bg-brand-accent/90 transition-all"
                     >
-                      View Collection
+                      {t("collections.viewCollection")}
                     </Link>
                   </motion.div>
 
@@ -152,7 +154,7 @@ export default function CollectionsPageClient() {
                       </motion.div>
                     ) : (
                       <div className="aspect-[3/4] bg-brand-light flex items-center justify-center text-brand-muted text-sm">
-                        No Image
+                        {t("common.noImage")}
                       </div>
                     )}
                   </div>

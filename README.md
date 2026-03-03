@@ -125,6 +125,51 @@ After a successful delivery step, the user's email, name, address, city, state, 
 
 ---
 
+## Internationalization (i18n)
+
+JANES supports **English** (`en`) and **French** (`fr`) with a custom lightweight i18n system — no external library, no URL restructuring.
+
+### How it works
+
+| Piece | Location |
+|---|---|
+| Provider + hook | `src/components/LocaleProvider.tsx` |
+| English translations | `src/i18n/en.json` |
+| French translations | `src/i18n/fr.json` |
+| Locale persistence | `localStorage` key `janes-locale` |
+
+`LocaleProvider` wraps all public pages in `(site)/layout.tsx`. Every component calls `useLocale()` to get `{ locale, setLocale, t }`.
+
+### Usage
+
+```tsx
+import { useLocale } from "@/components/LocaleProvider";
+
+export default function MyComponent() {
+  const { t } = useLocale();
+  return <h1>{t("shop.title")}</h1>;
+}
+```
+
+### Parameter interpolation
+
+```tsx
+t("shop.loadMore", { n: remaining })   // "Load More (5 remaining)"
+t("footer.copyright", { year: 2026 })  // "© 2026 JANES. All rights reserved."
+```
+
+### Adding a new language
+
+1. Copy `src/i18n/en.json` → `src/i18n/<code>.json` and translate all values.
+2. Import the new JSON in `src/components/LocaleProvider.tsx` and add it to the `messages` map.
+3. Add the locale entry to the `LOCALES` array.
+
+### Language toggle
+
+A language switcher is built into the Navbar (desktop dropdown + mobile inline buttons), mirroring the currency toggle pattern.
+
+---
+
 ## Environment Variables
 
 Create a `.env.local` file in this directory:

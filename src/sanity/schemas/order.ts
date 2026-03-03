@@ -14,7 +14,7 @@ export default {
       title: "Order Status",
       type: "string",
       options: {
-        list: ["pending", "awaiting_payment", "success", "failed", "processing", "shipped", "delivered"],
+        list: ["pending", "awaiting_payment", "success", "failed", "processing", "shipped", "delivered", "refunded", "disputed"],
       },
       initialValue: "pending",
     },
@@ -98,6 +98,31 @@ export default {
       title: "Customer Note",
       type: "text",
       description: "Optional note from the customer to the merchant",
+    },
+    {
+      name: "webhookVerifiedAt",
+      title: "Webhook Verified At",
+      type: "datetime",
+      readOnly: true,
+      description: "Timestamp set by the Paystack webhook — confirms server-side payment verification",
+    },
+    {
+      name: "refundedAt",
+      title: "Refunded At",
+      type: "datetime",
+      readOnly: true,
+    },
+    {
+      name: "disputedAt",
+      title: "Disputed At",
+      type: "datetime",
+      readOnly: true,
+    },
+    {
+      name: "disputeResolvedAt",
+      title: "Dispute Resolved At",
+      type: "datetime",
+      readOnly: true,
     },
   ],
   orderings: [

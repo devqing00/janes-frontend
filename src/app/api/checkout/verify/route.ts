@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { client, writeClient } from "@/lib/sanity";
+import { writeClient } from "@/lib/sanity";
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY ?? "";
 
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
 
     if (data.status === "success") {
       // Find matching order in Sanity and mark it success (idempotent)
-      const order = await client.fetch(
+      const order = await writeClient.fetch(
         `*[_type == "order" && reference == $ref][0]{ _id, status }`,
         { ref: reference }
       );

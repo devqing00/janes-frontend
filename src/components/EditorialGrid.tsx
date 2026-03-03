@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { useLocale } from "@/components/LocaleProvider";
 
 /* ── Layout config mapped by index ── */
 const LAYOUT = [
@@ -28,7 +29,12 @@ export interface EditorialGridProps {
 }
 
 export default function EditorialGrid({ items }: EditorialGridProps) {
-  const editorialItems = items && items.length > 0 ? items : FALLBACK_ITEMS;
+  const { t } = useLocale();
+  const editorialItems = items && items.length > 0 ? items : [
+    { image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=800&q=80", title: t("home.editorialItem1Title"), category: t("home.editorialItem1Category") },
+    { image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&q=80", title: t("home.editorialItem2Title"), category: t("home.editorialItem2Category") },
+    { image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=600&q=80", title: t("home.editorialItem3Title"), category: t("home.editorialItem3Category") },
+  ];
   return (
     <section className="bg-[#FAF8F5] py-24 md:py-36">
       <div className="mx-auto max-w-[1440px] px-6 md:px-12">
@@ -40,10 +46,10 @@ export default function EditorialGrid({ items }: EditorialGridProps) {
           transition={{ duration: 0.7 }}
         >
           <p className="text-[#666] uppercase text-[10px] tracking-[0.3em] mb-3">
-            From the Atelier
+            {t("home.editorialLabel")}
           </p>
           <h2 className="font-serif text-[#1A1A1A] text-4xl sm:text-5xl md:text-6xl leading-[1.05]">
-            Editorial <span className="italic font-normal">Stories</span>
+            {t("home.editorialHeading1")} <span className="italic font-normal">{t("home.editorialHeading2")}</span>
           </h2>
         </motion.div>
 

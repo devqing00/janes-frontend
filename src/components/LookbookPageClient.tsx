@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import PageHero from "@/components/PageHero";
+import { useLocale } from "@/components/LocaleProvider";
 
 /* Grid layout patterns that cycle for any number of images */
 const GRID_PATTERNS = [
@@ -50,16 +51,17 @@ export default function LookbookPageClient({
   description,
   images,
 }: LookbookPageClientProps) {
+  const { t } = useLocale();
   const lookbookImages = images && images.length > 0 ? images : FALLBACK_IMAGES;
-  const pageTitle = title || "Lookbook";
-  const pageItalic = titleItalic || "SS26";
-  const pageDesc = description || "A visual diary of our Spring / Summer 2026 collection captured in a sun-drenched desert landscape.";
+  const pageTitle = title || t("lookbook.title");
+  const pageItalic = titleItalic || t("lookbook.titleItalic");
+  const pageDesc = description || t("lookbook.description");
   return (
     <>
       <PageHero
         title={pageTitle}
         titleItalic={pageItalic}
-        subtitle="Editorial"
+        subtitle={t("lookbook.subtitle")}
         description={pageDesc}
       />
 

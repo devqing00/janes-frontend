@@ -2,50 +2,23 @@
 
 import { motion } from "framer-motion";
 import PageHero from "@/components/PageHero";
-
-const faqs = [
-  {
-    question: "How do I determine my size?",
-    answer: "We provide detailed size charts on each product page. For the best fit, we recommend measuring yourself and comparing to our chart. Our garments generally follow a relaxed, contemporary fit. If you're between sizes, we suggest sizing down for a more tailored look or up for an oversized silhouette.",
-  },
-  {
-    question: "What fabrics do you use?",
-    answer: "We source our fabrics from artisan mills across Italy, India, and Japan. Our materials include premium cotton, linen, silk, cashmere, and wool blends. Every fabric is selected for its quality, drape, and longevity. We also offer raw fabric rolls for designers and makers.",
-  },
-  {
-    question: "Do you offer international shipping?",
-    answer: "Yes, we ship worldwide. Standard international shipping takes 7-14 business days, while express shipping takes 3-5 business days. Shipping costs vary by destination and are calculated at checkout. Orders over $500 qualify for complimentary express shipping.",
-  },
-  {
-    question: "What is your return policy?",
-    answer: "We accept returns within 14 days of delivery for unworn items in original condition with all tags attached. Items must be returned in their original packaging. Sale items are final sale. Please visit our Shipping & Returns page for detailed instructions.",
-  },
-  {
-    question: "Do you offer wholesale?",
-    answer: "Yes, we work with select boutiques and retailers worldwide. For wholesale inquiries, please contact us at wholesale@janes.com with information about your store and the collections you're interested in.",
-  },
-  {
-    question: "How should I care for my garments?",
-    answer: "Each garment comes with specific care instructions on its label. As a general rule, we recommend cold or lukewarm hand washing for delicate items. Avoid tumble drying — instead, lay flat or hang to dry. For cashmere and wool pieces, we recommend professional dry cleaning.",
-  },
-  {
-    question: "Can I visit your showroom?",
-    answer: "Our Lagos showroom is open Monday through Saturday, 10am to 7pm WAT. We welcome walk-ins, but we recommend booking an appointment for a personalised styling experience. Contact us at hello@janes.com to schedule your visit.",
-  },
-  {
-    question: "Do you have a loyalty programme?",
-    answer: "We're developing an exclusive membership programme that will offer early access to collections, private events, and special pricing. Sign up for our newsletter to be the first to hear about it.",
-  },
-];
+import { useLocale } from "@/components/LocaleProvider";
 
 export default function FAQPage() {
+  const { t } = useLocale();
+
+  const faqs = Array.from({ length: 8 }, (_, i) => ({
+    question: t(`faq.q${i + 1}`),
+    answer: t(`faq.a${i + 1}`),
+  }));
+
   return (
     <>
       <PageHero
-        title="Frequently Asked"
-        titleItalic="Questions"
-        subtitle="Client Care"
-        description="Everything you need to know about your JANES experience."
+        title={t("faq.title")}
+        titleItalic={t("faq.titleItalic")}
+        subtitle={t("faq.subtitle")}
+        description={t("faq.description")}
       />
 
       <section className="bg-[#FAF8F5] py-24 md:py-36">
@@ -86,13 +59,13 @@ export default function FAQPage() {
             transition={{ duration: 0.7 }}
           >
             <p className="text-[#666] text-sm mb-4">
-              Still have questions?
+              {t("faq.ctaPrompt")}
             </p>
             <a
               href="/contact"
               className="inline-flex items-center gap-2 bg-[#232323] text-white uppercase text-[10px] tracking-[0.2em] px-8 py-3.5 hover:bg-[#C08A6F] transition-colors duration-300"
             >
-              Contact Us
+              {t("faq.ctaButton")}
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
               </svg>

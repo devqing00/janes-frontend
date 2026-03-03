@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import PageHero from "@/components/PageHero";
+import { useLocale } from "@/components/LocaleProvider";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 40 },
@@ -14,13 +15,14 @@ const fadeUp = {
 };
 
 export default function AboutPageClient() {
+  const { t } = useLocale();
   return (
     <>
       <PageHero
-        title="About"
-        titleItalic="Us"
-        subtitle="Our Story"
-        description="Founded on the belief that fashion should be both luxurious and accessible, JANES bridges heritage craftsmanship with modern sensibility."
+        title={t("about.title")}
+        titleItalic={t("about.titleItalic")}
+        subtitle={t("about.subtitle")}
+        description={t("about.description")}
       />
 
       {/* Story section */}
@@ -62,28 +64,21 @@ export default function AboutPageClient() {
               }}
             >
               <p className="text-brand-muted uppercase text-[10px] tracking-widest mb-6">
-                The Vision
+                {t("about.storyLabel")}
               </p>
               <h2 className="font-serif text-brand-text text-4xl sm:text-5xl md:text-6xl leading-[1.05]">
-                Crafted with{" "}
-                <span className="italic font-normal">Passion</span>
+                {t("about.storyHeading1")}{" "}
+                <span className="italic font-normal">{t("about.storyHeading2")}</span>
               </h2>
               <div className="mt-8 space-y-5 text-brand-muted text-sm leading-relaxed max-w-lg">
                 <p>
-                  JANES was born from a desire to create fashion that speaks to
-                  the modern individual — clothing that is as thoughtfully made
-                  as it is beautifully designed.
+                  {t("about.storyParagraph1")}
                 </p>
                 <p>
-                  Every piece begins with the finest raw fabrics sourced from
-                  artisan mills across Italy, India, and Japan. Our design
-                  process honors traditional tailoring techniques while embracing
-                  contemporary silhouettes that move with the body.
+                  {t("about.storyParagraph2")}
                 </p>
                 <p>
-                  We believe in slow fashion — garments that are meant to last,
-                  to age gracefully, and to become more cherished with every
-                  wear. Quality over quantity, always.
+                  {t("about.storyParagraph3")}
                 </p>
               </div>
             </motion.div>
@@ -102,26 +97,26 @@ export default function AboutPageClient() {
             variants={fadeUp}
           >
             <p className="text-brand-muted uppercase text-[10px] tracking-widest mb-4">
-              What We Stand For
+              {t("about.valuesLabel")}
             </p>
             <h2 className="font-serif text-brand-text text-4xl sm:text-5xl md:text-6xl leading-[1.05]">
-              Our <span className="italic font-normal">Values</span>
+              {t("about.valuesHeading1")} <span className="italic font-normal">{t("about.valuesHeading2")}</span>
             </h2>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
             {[
               {
-                title: "Craftsmanship",
-                desc: "Every stitch, every seam, every button is placed with intention. We work with master tailors who bring decades of experience to each garment.",
+                title: t("about.craftsmanshipTitle"),
+                desc: t("about.craftsmanshipDesc"),
               },
               {
-                title: "Sustainability",
-                desc: "From ethically sourced fabrics to minimal-waste pattern cutting, we're committed to reducing our environmental footprint at every stage.",
+                title: t("about.sustainabilityTitle"),
+                desc: t("about.sustainabilityDesc"),
               },
               {
-                title: "Timelessness",
-                desc: "We design beyond trends. Our pieces are made to be wardrobe staples — versatile, enduring, and always elegant.",
+                title: t("about.timelessnessTitle"),
+                desc: t("about.timelessnessDesc"),
               },
             ].map((value, i) => (
               <motion.div
@@ -162,7 +157,7 @@ export default function AboutPageClient() {
       <section className="relative h-[50vh] md:h-[70vh] overflow-hidden">
         <Image
           src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1400&q=80"
-          alt="JANES workshop"
+          alt={t("about.workshopImageAlt")}
           fill
           className="object-cover"
           sizes="100vw"
@@ -181,15 +176,13 @@ export default function AboutPageClient() {
             variants={fadeUp}
           >
             <p className="text-brand-muted uppercase text-[10px] tracking-widest mb-6">
-              From the Designer
+              {t("about.designerLabel")}
             </p>
             <blockquote className="font-serif text-brand-text text-2xl sm:text-3xl md:text-4xl leading-snug italic">
-              &ldquo;I design for the woman and man who sees clothing as an
-              extension of their identity — not a costume, but a quiet
-              declaration of self.&rdquo;
+              &ldquo;{t("about.designerQuote")}&rdquo;
             </blockquote>
             <p className="text-brand-muted text-sm mt-8 uppercase tracking-widest">
-              — Jane Stitches, Creative Director
+              {t("about.designerAttribution")}
             </p>
           </motion.div>
         </div>

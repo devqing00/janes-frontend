@@ -2,14 +2,17 @@
 
 import { motion } from "framer-motion";
 import PageHero from "@/components/PageHero";
+import { useLocale } from "@/components/LocaleProvider";
 
 export default function TermsPage() {
+  const { t } = useLocale();
+
   return (
     <>
       <PageHero
-        title="Terms of"
-        titleItalic="Service"
-        subtitle="Legal"
+        title={t("terms.title")}
+        titleItalic={t("terms.titleItalic")}
+        subtitle={t("terms.subtitle")}
       />
 
       <section className="bg-[#FAF8F5] py-24 md:py-36">
@@ -20,99 +23,64 @@ export default function TermsPage() {
             transition={{ duration: 0.7 }}
           >
             <p className="text-[#666] text-xs uppercase tracking-widest mb-12">
-              Last updated: March 2026
+              {t("terms.lastUpdated")}
             </p>
 
             <div className="space-y-12 text-[#666] text-sm leading-relaxed">
               <div>
                 <h2 className="font-serif text-[#1A1A1A] text-2xl md:text-3xl mb-4">
-                  General Conditions
+                  {t("terms.s1Heading")}
                 </h2>
-                <p>
-                  By accessing and placing an order with JANES, you confirm that you are in
-                  agreement with and bound by the terms and conditions contained herein. These
-                  terms apply to the entire website and any communication between you and JANES.
-                </p>
-                <p className="mt-4">
-                  We reserve the right to refuse service to anyone for any reason at any time.
-                  Prices for our products are subject to change without notice.
-                </p>
+                <p>{t("terms.s1p1")}</p>
+                <p className="mt-4">{t("terms.s1p2")}</p>
               </div>
 
               <div>
                 <h2 className="font-serif text-[#1A1A1A] text-2xl md:text-3xl mb-4">
-                  Products & Orders
+                  {t("terms.s2Heading")}
                 </h2>
-                <p>
-                  We have made every effort to display colours and images of our products as
-                  accurately as possible. However, we cannot guarantee that your device&apos;s
-                  display of any colour will be completely accurate.
-                </p>
-                <p className="mt-4">
-                  We reserve the right to limit the quantities of any products or services
-                  that we offer. All descriptions of products and pricing are subject to
-                  change at any time without notice, at our sole discretion.
-                </p>
+                <p>{t("terms.s2p1")}</p>
+                <p className="mt-4">{t("terms.s2p2")}</p>
               </div>
 
               <div>
                 <h2 className="font-serif text-[#1A1A1A] text-2xl md:text-3xl mb-4">
-                  Payment
+                  {t("terms.s3Heading")}
                 </h2>
-                <p>
-                  All payments are processed securely. We accept major credit/debit cards
-                  and bank transfers. By submitting your payment details, you warrant that
-                  you are authorised to use the payment method provided.
-                </p>
+                <p>{t("terms.s3p")}</p>
               </div>
 
               <div>
                 <h2 className="font-serif text-[#1A1A1A] text-2xl md:text-3xl mb-4">
-                  Intellectual Property
+                  {t("terms.s4Heading")}
                 </h2>
-                <p>
-                  All content on this website — including text, graphics, logos, images,
-                  and software — is the property of JANES and is protected by copyright
-                  and intellectual property laws. You may not reproduce, distribute, or
-                  create derivative works from any content without our express written
-                  permission.
-                </p>
+                <p>{t("terms.s4p")}</p>
               </div>
 
               <div>
                 <h2 className="font-serif text-[#1A1A1A] text-2xl md:text-3xl mb-4">
-                  Limitation of Liability
+                  {t("terms.s5Heading")}
                 </h2>
-                <p>
-                  JANES shall not be liable for any indirect, incidental, special,
-                  consequential, or punitive damages resulting from your use of or
-                  inability to use our services. Our total liability shall not exceed
-                  the amount paid by you for the specific product or service that gave
-                  rise to the claim.
-                </p>
+                <p>{t("terms.s5p")}</p>
               </div>
 
               <div>
                 <h2 className="font-serif text-[#1A1A1A] text-2xl md:text-3xl mb-4">
-                  Governing Law
+                  {t("terms.s6Heading")}
                 </h2>
-                <p>
-                  These terms shall be governed by and construed in accordance with the
-                  laws of the Federal Republic of Nigeria. Any disputes arising shall be
-                  subject to the exclusive jurisdiction of the courts of Lagos, Nigeria.
-                </p>
+                <p>{t("terms.s6p")}</p>
               </div>
 
               <div>
                 <h2 className="font-serif text-[#1A1A1A] text-2xl md:text-3xl mb-4">
-                  Contact
+                  {t("terms.s7Heading")}
                 </h2>
                 <p>
-                  Questions about the Terms of Service should be sent to us at{" "}
+                  {t("terms.s7p").split("legal@janes.com")[0]}
                   <a href="mailto:legal@janes.com" className="text-[#C08A6F] hover:underline">
                     legal@janes.com
                   </a>
-                  .
+                  {t("terms.s7p").split("legal@janes.com")[1]}
                 </p>
               </div>
             </div>

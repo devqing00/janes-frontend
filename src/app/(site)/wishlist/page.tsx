@@ -7,17 +7,13 @@ import PageHero from "@/components/PageHero";
 import { useWishlist } from "@/components/WishlistProvider";
 import { useCart } from "@/components/CartProvider";
 import { useSiteSettings } from "@/components/SiteSettingsProvider";
-
-const categoryLabels: Record<string, string> = {
-  womenswear: "Womenswear",
-  menswear: "Menswear",
-  fabrics: "Raw Fabrics",
-};
+import { useLocale } from "@/components/LocaleProvider";
 
 export default function WishlistPage() {
   const { items, removeItem } = useWishlist();
   const { addItem } = useCart();
   const { formatPrice } = useSiteSettings();
+  const { t } = useLocale();
 
   const handleAddToBag = (item: typeof items[0]) => {
     addItem({
@@ -32,9 +28,9 @@ export default function WishlistPage() {
   return (
     <>
       <PageHero
-        title="Wishlist"
-        subtitle="Saved Pieces"
-        description="Your curated collection of pieces you love."
+        title={t("wishlist.title")}
+        subtitle={t("wishlist.subtitle")}
+        description={t("wishlist.description")}
       />
 
       <section className="bg-brand-bg py-16 md:py-24">
@@ -44,12 +40,12 @@ export default function WishlistPage() {
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-16 h-16 text-brand-border mx-auto mb-4">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
               </svg>
-              <p className="text-brand-muted text-sm mb-4">Your wishlist is empty</p>
+              <p className="text-brand-muted text-sm mb-4">{t("wishlist.emptyMessage")}</p>
               <Link
                 href="/shop"
                 className="inline-block bg-brand-accent text-white uppercase text-[10px] tracking-[0.2em] px-8 py-3 hover:bg-brand-accent/90 transition-all"
               >
-                Explore the Collection
+                {t("wishlist.exploreCta")}
               </Link>
             </div>
           ) : (
@@ -74,7 +70,7 @@ export default function WishlistPage() {
                           />
                         ) : (
                           <div className="absolute inset-0 flex items-center justify-center text-brand-muted text-xs">
-                            No Image
+                            {t("common.noImage")}
                           </div>
                         )}
                       </div>
@@ -84,7 +80,7 @@ export default function WishlistPage() {
                     <button
                       onClick={() => removeItem(item._id)}
                       className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-[#C08A6F] hover:bg-[#C08A6F] hover:text-white transition-all"
-                      aria-label="Remove from wishlist"
+                      aria-label={t("wishlist.removeAriaLabel")}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
@@ -100,7 +96,7 @@ export default function WishlistPage() {
                         onClick={() => handleAddToBag(item)}
                         className="mt-3 w-full bg-[#232323] text-white uppercase text-[9px] tracking-[0.15em] py-2.5 hover:bg-[#C08A6F] transition-colors"
                       >
-                        Add to Bag
+                        {t("common.addToBag")}
                       </button>
                     </div>
                   </div>

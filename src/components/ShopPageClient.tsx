@@ -7,8 +7,8 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import PageHero from "@/components/PageHero";
 import { useSiteSettings } from "@/components/SiteSettingsProvider";
+import { useLocale } from "@/components/LocaleProvider";
 
-const categories = ["All", "womenswear", "menswear", "fabrics"] as const;
 const categoryLabels: Record<string, string> = {
   All: "All",
   womenswear: "Womenswear",
@@ -17,14 +17,14 @@ const categoryLabels: Record<string, string> = {
 };
 const subcategories = [
   "All",
-  "Knitwear",
-  "Jackets",
-  "Coats",
+  "Agbada",
+  "Kaftan",
+  "Ankara",
+  "Aso-Oke",
+  "Two-Piece",
   "Tops",
-  "Skirts",
   "Dresses",
   "Trousers",
-  "Shirts",
 ] as const;
 
 interface Product {
@@ -57,17 +57,35 @@ const cardVariants = {
 export default function ShopPageClient() {
   const searchParams = useSearchParams();
   const urlCategory = searchParams.get("category") || "All";
+  const [categories, setCategories] = useState<string[]>(["All"]);
   const [activeCategory, setActiveCategory] = useState<string>(urlCategory);
   const [activeSub, setActiveSub] = useState<string>("All");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(12);
   const { formatPrice } = useSiteSettings();
+  const { t } = useLocale();
+
+  // Fetch dynamic categories
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const res = await fetch("/api/products?categories=true");
+        if (res.ok) {
+          const cats: string[] = await res.json();
+          setCategories(["All", ...cats]);
+        }
+      } catch {
+        // keep default
+      }
+    }
+    fetchCategories();
+  }, []);
 
   // Sync category from URL on mount
   useEffect(() => {
     const cat = searchParams.get("category") || "All";
-    if (cat !== "All" && categories.includes(cat as typeof categories[number])) {
+    if (cat !== "All") {
       setActiveCategory(cat);
     }
   }, [searchParams]);
@@ -93,7 +111,8 @@ export default function ShopPageClient() {
     const catMatch =
       activeCategory === "All" || p.category === activeCategory;
     const subMatch =
-      activeSub === "All" || p.subcategory === activeSub;
+      activeSub === "All" ||
+      p.subcategory?.toLowerCase() === activeSub.toLowerCase();
     return catMatch && subMatch;
   });
 
@@ -103,9 +122,9 @@ export default function ShopPageClient() {
   return (
     <>
       <PageHero
-        title="Shop"
-        subtitle="Browse Our Collection"
-        description="Discover contemporary fashion pieces crafted with precision and care. Filter by category to find your perfect piece."
+        title={t("shop.title")}
+        subtitle={t("shop.subtitle")}
+        description={t("shop.description")}
       />
 
       <section className="bg-brand-bg py-16 md:py-24">
@@ -127,7 +146,7 @@ export default function ShopPageClient() {
                       : "bg-transparent text-brand-text border-brand-text/20 hover:border-brand-text/50"
                   }`}
                 >
-                  {categoryLabels[cat]}
+                  {t(`categories.${cat}`) !== `categories.${cat}` ? t(`categories.${cat}`) : cat.charAt(0).toUpperCase() + cat.slice(1)}
                 </button>
               ))}
             </div>
@@ -194,33 +213,33 @@ export default function ShopPageClient() {
                           />
                         ) : (
                           <div className="absolute inset-0 flex items-center justify-center text-brand-muted text-xs">
-                            No Image
+                            {t("common.noImage")}
                           </div>
                         )}
                         {outOfStock && (
                           <span className="absolute top-3 left-3 bg-[#232323] text-white uppercase text-[8px] tracking-[0.15em] px-3 py-1.5">
-                            Sold Out
+                            {t("common.soldOut")}
                           </span>
                         )}
                         {!outOfStock && onSale && (
                           <span className="absolute top-3 left-3 bg-[#C08A6F] text-white uppercase text-[8px] tracking-[0.15em] px-3 py-1.5">
-                            Sale
+                            {t("common.sale")}
                           </span>
                         )}
                         {!outOfStock && !onSale && item.featured && (
                           <span className="absolute top-3 left-3 bg-[#232323] text-white uppercase text-[8px] tracking-[0.15em] px-3 py-1.5">
-                            Featured
+                            {t("common.featured")}
                           </span>
                         )}
                         <div className="absolute bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-sm translate-y-full group-hover:translate-y-0 transition-transform duration-500">
                           <span className="uppercase text-[10px] tracking-[0.15em] text-[#1A1A1A]">
-                            Quick View
+                            {t("common.quickView")}
                           </span>
                         </div>
                       </div>
                       <div className="mt-4">
                         <p className="text-brand-muted uppercase text-[9px] tracking-widest">
-                          {categoryLabels[item.category] || item.category}
+                          {t(`categories.${item.category}`) !== `categories.${item.category}` ? t(`categories.${item.category}`) : item.category}
                         </p>
                         <p className="text-brand-text text-sm mt-1">{item.name}</p>
                         <div className="flex items-center gap-2 mt-1">
@@ -248,7 +267,7 @@ export default function ShopPageClient() {
                 onClick={() => setVisibleCount((prev) => prev + 12)}
                 className="inline-block uppercase text-[10px] tracking-[0.2em] text-[#1A1A1A] border border-[#1A1A1A]/20 px-10 py-3.5 hover:border-[#C08A6F] hover:text-[#C08A6F] transition-colors"
               >
-                Load More ({filtered.length - visibleCount} remaining)
+                {t("shop.loadMore", { n: String(filtered.length - visibleCount) })}
               </button>
             </div>
           )}
@@ -256,7 +275,7 @@ export default function ShopPageClient() {
           {!loading && filtered.length === 0 && (
             <div className="text-center py-20">
               <p className="text-brand-muted text-sm">
-                No pieces found for this filter combination.
+                {t("shop.noResults")}
               </p>
             </div>
           )}

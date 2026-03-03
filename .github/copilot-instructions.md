@@ -75,3 +75,36 @@ interface SavedCheckout {
 - Use `async/await` not `.then()` chains
 - Keep components small — extract logic to hooks or utility functions
 - Never use `any` type — always be explicit
+
+## i18n Pattern (Internationalization)
+
+JANES uses a custom lightweight i18n system with `LocaleProvider` + `useLocale()` hook. Supported locales: English (`en`) and French (`fr`). No external library, no URL routing changes.
+
+### Always use `t()` for user-facing text
+```tsx
+import { useLocale } from "@/components/LocaleProvider";
+
+const { t } = useLocale();
+// ✅ t("shop.title")
+// ✅ t("shop.loadMore", { n: 5 })
+// ❌ "Shop" (hardcoded English)
+```
+
+### Translation files
+- `src/i18n/en.json` — English (source of truth)
+- `src/i18n/fr.json` — French
+
+### Key naming convention
+Keys use dot-notation namespaces: `namespace.keyName`
+- `common.*` — shared strings (Continue Shopping, No Image, etc.)
+- `categories.*` — product category labels
+- `nav.*`, `hero.*`, `home.*`, `footer.*`, `cart.*`, `search.*` — layout sections
+- `shop.*`, `about.*`, `contact.*`, `faq.*`, `privacy.*`, `terms.*`, `shipping.*`, `collections.*`, `lookbook.*`, `wishlist.*`, `orders.*`, `checkout.*` — page-specific
+
+### Adding new keys
+1. Add the key+value to **both** `en.json` and `fr.json`
+2. Use the key via `t("namespace.key")` in the component
+3. For parameterized strings, use `{placeholder}` syntax: `"Load More ({n} remaining)"`
+
+### Locale persistence
+Stored in `localStorage` under key `janes-locale` (default: `en`). Language toggle is in the Navbar, matching the currency toggle pattern.

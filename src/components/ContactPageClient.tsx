@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import PageHero from "@/components/PageHero";
+import { useLocale } from "@/components/LocaleProvider";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -25,6 +26,7 @@ interface ContactPageClientProps {
 }
 
 export default function ContactPageClient({ contactInfo }: ContactPageClientProps) {
+  const { t } = useLocale();
   const email = contactInfo?.email || "hello@janes.com";
   const phone = contactInfo?.phone || "+234 801 234 5678";
   const address = contactInfo?.address || "24 Victoria Island Crescent, Lagos, Nigeria";
@@ -33,10 +35,10 @@ export default function ContactPageClient({ contactInfo }: ContactPageClientProp
     : "#";
 
   const contactDetails = [
-    { label: "Email", value: email, href: `mailto:${email}` },
-    { label: "Phone", value: phone, href: `tel:${phone.replace(/\s/g, "")}` },
-    { label: "Showroom", value: address, href: "#" },
-    { label: "Hours", value: "Mon – Sat, 10am – 7pm WAT", href: "#" },
+    { label: t("contact.emailLabel"), value: email, href: `mailto:${email}` },
+    { label: t("contact.phone"), value: phone, href: `tel:${phone.replace(/\s/g, "")}` },
+    { label: t("contact.showroom"), value: address, href: "#" },
+    { label: t("contact.hours"), value: t("contact.hoursValue"), href: "#" },
   ];
 
   const socials = [
@@ -85,10 +87,10 @@ export default function ContactPageClient({ contactInfo }: ContactPageClientProp
   return (
     <>
       <PageHero
-        title="Get in"
-        titleItalic="Touch"
-        subtitle="Contact"
-        description="We'd love to hear from you. Whether it's a styling question, wholesale inquiry, or just to say hello."
+        title={t("contact.title")}
+        titleItalic={t("contact.titleItalic")}
+        subtitle={t("contact.subtitle")}
+        description={t("contact.description")}
       />
 
       <section className="bg-brand-bg py-24 md:py-36">
@@ -103,7 +105,7 @@ export default function ContactPageClient({ contactInfo }: ContactPageClientProp
               variants={fadeUp}
             >
               <p className="text-brand-muted uppercase text-[10px] tracking-widest mb-8">
-                Contact Information
+                {t("contact.infoHeading")}
               </p>
               <div className="space-y-8">
                 {contactDetails.map((item) => (
@@ -128,7 +130,7 @@ export default function ContactPageClient({ contactInfo }: ContactPageClientProp
               {/* Social links */}
               <div className="mt-12">
                 <p className="text-brand-muted uppercase text-[9px] tracking-widest mb-4">
-                  Follow Us
+                  {t("contact.followUs")}
                 </p>
                 <div className="flex gap-6">
                   {socials.map((social) => (
@@ -162,7 +164,7 @@ export default function ContactPageClient({ contactInfo }: ContactPageClientProp
               }}
             >
               <p className="text-brand-muted uppercase text-[10px] tracking-widest mb-8">
-                Send a Message
+                {t("contact.formHeading")}
               </p>
 
               {submitted ? (
@@ -177,16 +179,16 @@ export default function ContactPageClient({ contactInfo }: ContactPageClientProp
                     </svg>
                   </div>
                   <h3 className="font-serif text-brand-text text-2xl mb-3">
-                    Thank you, <span className="italic font-normal">{formData.name || "friend"}</span>
+                    {t("contact.successTitle")} <span className="italic font-normal">{formData.name || ""}</span>
                   </h3>
                   <p className="text-brand-muted text-sm max-w-sm mx-auto">
-                    Your message has been received. We&apos;ll be in touch shortly.
+                    {t("contact.successMessage")}
                   </p>
                   <button
                     onClick={() => setSubmitted(false)}
                     className="mt-8 text-brand-muted text-xs uppercase tracking-widest hover:text-brand-accent transition-colors"
                   >
-                    Send another message
+                    {t("contact.sendAnother")}
                   </button>
                 </motion.div>
               ) : (
@@ -194,7 +196,7 @@ export default function ContactPageClient({ contactInfo }: ContactPageClientProp
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                       <label className="text-brand-muted uppercase text-[9px] tracking-widest block mb-2">
-                        Name
+                        {t("contact.nameLabel")}
                       </label>
                       <input
                         type="text"
@@ -206,7 +208,7 @@ export default function ContactPageClient({ contactInfo }: ContactPageClientProp
                     </div>
                     <div>
                       <label className="text-brand-muted uppercase text-[9px] tracking-widest block mb-2">
-                        Email
+                        {t("contact.emailLabel")}
                       </label>
                       <input
                         type="email"
@@ -219,7 +221,7 @@ export default function ContactPageClient({ contactInfo }: ContactPageClientProp
                   </div>
                   <div>
                     <label className="text-brand-muted uppercase text-[9px] tracking-widest block mb-2">
-                      Subject
+                      {t("contact.subjectLabel")}
                     </label>
                     <input
                       type="text"
@@ -231,7 +233,7 @@ export default function ContactPageClient({ contactInfo }: ContactPageClientProp
                   </div>
                   <div>
                     <label className="text-brand-muted uppercase text-[9px] tracking-widest block mb-2">
-                      Message
+                      {t("contact.messageLabel")}
                     </label>
                     <textarea
                       required
@@ -249,7 +251,7 @@ export default function ContactPageClient({ contactInfo }: ContactPageClientProp
                     disabled={submitting}
                     className="bg-brand-accent text-white uppercase text-[10px] tracking-[0.2em] px-10 py-3.5 hover:bg-brand-accent/90 transition-all mt-4 disabled:opacity-60"
                   >
-                    {submitting ? "Sending..." : "Send Message"}
+                    {submitting ? t("contact.submitting") : t("contact.submitButton")}
                   </button>
                 </form>
               )}

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useSiteSettings } from "./SiteSettingsProvider";
 import { useWishlist } from "./WishlistProvider";
+import { useLocale } from "@/components/LocaleProvider";
 
 interface FeaturedProduct {
   _id: string;
@@ -31,6 +32,7 @@ export default function FeaturedProducts() {
   const [loading, setLoading] = useState(true);
   const { formatPrice } = useSiteSettings();
   const { toggleItem, isInWishlist } = useWishlist();
+  const { t } = useLocale();
 
   useEffect(() => {
     async function fetchFeatured() {
@@ -64,17 +66,17 @@ export default function FeaturedProducts() {
         >
           <div>
             <p className="text-[#666] uppercase text-[10px] tracking-[0.3em] mb-3">
-              Featured Pieces
+              {t("home.featuredLabel")}
             </p>
             <h2 className="font-serif text-[#1A1A1A] text-4xl sm:text-5xl md:text-6xl leading-[1.05]">
-              New <span className="italic font-normal">Arrivals</span>
+              {t("home.featuredHeading1")} <span className="italic font-normal">{t("home.featuredHeading2")}</span>
             </h2>
           </div>
           <Link
             href="/shop"
             className="text-[#1A1A1A] uppercase text-[10px] tracking-[0.2em] border-b border-[#1A1A1A]/30 pb-1 hover:border-[#C08A6F] hover:text-[#C08A6F] transition-colors group inline-flex items-center gap-2"
           >
-            Shop All
+            {t("home.shopAll")}
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3 h-3 group-hover:translate-x-1 transition-transform">
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
             </svg>
@@ -115,20 +117,20 @@ export default function FeaturedProducts() {
                       />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center text-[#666] text-xs">
-                        No Image
+                        {t("common.noImage")}
                       </div>
                     )}
                     {/* Badges */}
                     <div className="absolute top-3 left-3 flex flex-col gap-1.5">
                       {isNew(item._createdAt) && (
                         <span className="bg-[#C08A6F] text-white uppercase text-[8px] tracking-[0.15em] px-3 py-1.5">
-                          New
+                          {t("common.new")}
                         </span>
                       )}
                     </div>
                     {/* Wishlist button */}
                     <button
-                      aria-label={isInWishlist(item._id) ? "Remove from wishlist" : "Add to wishlist"}
+                      aria-label={isInWishlist(item._id) ? t("home.removeFromWishlist") : t("home.addToWishlist")}
                       onClick={(e) => {
                         e.preventDefault();
                         toggleItem({ _id: item._id, name: item.name, slug: item.slug, price: item.price, image: item.image });
@@ -142,7 +144,7 @@ export default function FeaturedProducts() {
                     {/* Quick view overlay */}
                     <div className="absolute bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-sm translate-y-full group-hover:translate-y-0 transition-transform duration-500">
                       <span className="uppercase text-[10px] tracking-[0.15em] text-[#1A1A1A]">
-                        Quick View
+                        {t("common.quickView")}
                       </span>
                     </div>
                   </div>

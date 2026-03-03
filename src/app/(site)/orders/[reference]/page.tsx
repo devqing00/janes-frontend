@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import PageHero from "@/components/PageHero";
+import { useLocale } from "@/components/LocaleProvider";
 
 interface OrderItem {
   name: string;
@@ -47,8 +48,68 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   delivered: { label: "Delivered", color: "bg-green-50 text-green-700 border-green-200" },
 };
 
+const STATUS_STEPS = [
+  { key: "pending", label: "Order Placed" },
+  { key: "processing", label: "Processing" },
+  { key: "shipped", label: "Shipped" },
+  { key: "delivered", label: "Delivered" },
+];
+
+function StatusTimeline({ status }: { status: string }) {
+  const effectiveStatus = status === "success" || status === "awaiting_payment" ? "pending" : status;
+  const currentIdx = STATUS_STEPS.findIndex((s) => s.key === effectiveStatus);
+
+  if (status === "failed") {
+    return (
+      <div className="flex items-center justify-center gap-2 py-4">
+        <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+        <span className="text-red-600 text-sm">Payment failed — please try again or contact support.</span>
+      </div>
+    );
+  }
+
+  if (currentIdx < 0) return null;
+
+  return (
+    <div className="pt-2 pb-1">
+      <div className="flex items-center justify-between">
+        {STATUS_STEPS.map((step, idx) => {
+          const isComplete = idx <= currentIdx;
+          const isCurrent = idx === currentIdx;
+          return (
+            <div key={step.key} className="flex items-center flex-1 last:flex-none">
+              <div className="flex flex-col items-center">
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center border-2 transition-colors ${
+                  isComplete
+                    ? "border-[#C08A6F] bg-[#C08A6F]"
+                    : "border-[#E8E2DB] bg-white"
+                }`}>
+                  {isComplete ? (
+                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                  ) : (
+                    <div className="w-2 h-2 rounded-full bg-[#E8E2DB]" />
+                  )}
+                </div>
+                <span className={`text-[9px] uppercase tracking-wider mt-1.5 whitespace-nowrap ${
+                  isCurrent ? "text-[#C08A6F] font-medium" : isComplete ? "text-[#1A1A1A]" : "text-[#CCC]"
+                }`}>
+                  {step.label}
+                </span>
+              </div>
+              {idx < STATUS_STEPS.length - 1 && (
+                <div className={`flex-1 h-0.5 mx-2 mt-[-16px] ${idx < currentIdx ? "bg-[#C08A6F]" : "bg-[#E8E2DB]"}`} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function OrderLookupPage({ params }: { params: Promise<{ reference: string }> }) {
   const { reference } = use(params);
+  const { t } = useLocale();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -81,8 +142,8 @@ export default function OrderLookupPage({ params }: { params: Promise<{ referenc
   if (loading) {
     return (
       <>
-        <PageHero title="Order Status" subtitle="Looking Up" description="Finding your order..." />
-        <section className="bg-brand-bg py-16"><div className="max-w-2xl mx-auto px-6 text-center text-brand-muted text-sm">Loading...</div></section>
+        <PageHero title={t("orders.orderStatus")} subtitle={t("orders.lookingUp")} description={t("orders.findingOrder")} />
+        <section className="bg-brand-bg py-16"><div className="max-w-2xl mx-auto px-6 text-center text-brand-muted text-sm">{t("common.loading")}</div></section>
       </>
     );
   }
@@ -90,12 +151,12 @@ export default function OrderLookupPage({ params }: { params: Promise<{ referenc
   if (notFound || !order) {
     return (
       <>
-        <PageHero title="Order Not Found" subtitle="Tracking" description="We couldn't find an order with that reference." />
+        <PageHero title={t("orders.notFoundTitle")} subtitle={t("orders.tracking")} description={t("orders.notFoundDesc")} />
         <section className="bg-brand-bg py-16">
           <div className="max-w-2xl mx-auto px-6 text-center">
-            <p className="text-brand-muted text-sm mb-6">The reference may be incorrect or the order may have been removed.</p>
+            <p className="text-brand-muted text-sm mb-6">{t("orders.notFoundHint")}</p>
             <Link href="/shop" className="inline-block bg-brand-accent text-white uppercase text-[10px] tracking-[0.2em] px-8 py-3 hover:bg-brand-accent/90 transition-all">
-              Continue Shopping
+              {t("common.continueShopping")}
             </Link>
           </div>
         </section>
@@ -108,7 +169,7 @@ export default function OrderLookupPage({ params }: { params: Promise<{ referenc
 
   return (
     <>
-      <PageHero title="Order Status" subtitle="Tracking" description={`Reference: ${order.reference}`} />
+      <PageHero title={t("orders.orderStatus")} subtitle={t("orders.tracking")} description={`${t("orders.reference")} ${order.reference}`} />
 
       <section className="bg-brand-bg py-12 md:py-20">
         <div className="max-w-2xl mx-auto px-6 md:px-12">
@@ -121,16 +182,19 @@ export default function OrderLookupPage({ params }: { params: Promise<{ referenc
               <p className="text-[#999] text-xs">{formatDate(order._createdAt)}</p>
             </div>
 
+            {/* Timeline */}
+            <StatusTimeline status={order.status} />
+
             {/* Customer */}
             <div className="border-t border-[#E8E2DB] pt-4">
-              <p className="text-[10px] uppercase tracking-[0.15em] text-[#999] mb-2">Customer</p>
+              <p className="text-[10px] uppercase tracking-[0.15em] text-[#999] mb-2">{t("orders.customer")}</p>
               <p className="text-[#1A1A1A] text-sm">{order.customerName}</p>
               <p className="text-[#999] text-xs">{order.customerEmail}</p>
             </div>
 
             {/* Items */}
             <div className="border-t border-[#E8E2DB] pt-4">
-              <p className="text-[10px] uppercase tracking-[0.15em] text-[#999] mb-3">Items</p>
+              <p className="text-[10px] uppercase tracking-[0.15em] text-[#999] mb-3">{t("orders.items")}</p>
               <div className="space-y-3">
                 {(order.items || []).map((item, i) => (
                   <div key={i} className="flex justify-between text-sm">
@@ -156,14 +220,14 @@ export default function OrderLookupPage({ params }: { params: Promise<{ referenc
 
             {/* Total */}
             <div className="border-t border-[#E8E2DB] pt-4 flex justify-between text-base font-medium text-[#1A1A1A]">
-              <span>Total</span>
+              <span>{t("orders.total")}</span>
               <span>{fmtPrice(grandTotal, order.currency)}</span>
             </div>
 
             {/* Shipping address */}
             {order.shippingAddress && (
               <div className="border-t border-[#E8E2DB] pt-4">
-                <p className="text-[10px] uppercase tracking-[0.15em] text-[#999] mb-2">Shipping Address</p>
+                <p className="text-[10px] uppercase tracking-[0.15em] text-[#999] mb-2">{t("orders.shippingAddress")}</p>
                 <address className="not-italic text-sm text-[#1A1A1A] space-y-0.5">
                   {order.shippingAddress.line1 && <p>{order.shippingAddress.line1}</p>}
                   {order.shippingAddress.city && (
@@ -175,9 +239,12 @@ export default function OrderLookupPage({ params }: { params: Promise<{ referenc
             )}
           </div>
 
-          <div className="text-center mt-8">
+          <div className="text-center mt-8 flex justify-center gap-6">
+            <Link href="/orders" className="text-[#666] uppercase text-[10px] tracking-[0.15em] hover:text-[#C08A6F] transition-colors border-b border-[#666]/30 pb-1">
+              {t("orders.title")}
+            </Link>
             <Link href="/shop" className="text-[#666] uppercase text-[10px] tracking-[0.15em] hover:text-[#C08A6F] transition-colors border-b border-[#666]/30 pb-1">
-              Continue Shopping
+              {t("common.continueShopping")}
             </Link>
           </div>
         </div>

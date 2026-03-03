@@ -19,33 +19,10 @@ interface BankAccount {
   sortCode: string;
 }
 
-interface Settings {
-  brandName: string;
-  tagline: string;
-  contactEmail: string;
-  contactPhone: string;
-  contactAddress: string;
-  instagramUrl: string;
-  currency: string;
-  shippingNote: string;
-}
-
-const defaults: Settings = {
-  brandName: "JANES",
-  tagline: "",
-  contactEmail: "",
-  contactPhone: "",
-  contactAddress: "",
-  instagramUrl: "",
-  currency: "USD",
-  shippingNote: "",
-};
-
 export default function SettingsPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState<Settings>(defaults);
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
   const [activePaymentMethods, setActivePaymentMethods] = useState<string[]>(["paystack"]);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
@@ -56,16 +33,6 @@ export default function SettingsPage() {
         const res = await fetch("/api/admin/settings");
         if (res.ok) {
           const data = await res.json();
-          setForm({
-            brandName: data.brandName || defaults.brandName,
-            tagline: data.tagline || "",
-            contactEmail: data.contactEmail || "",
-            contactPhone: data.contactPhone || "",
-            contactAddress: data.contactAddress || "",
-            instagramUrl: data.instagramUrl || "",
-            currency: data.currency || "USD",
-            shippingNote: data.shippingNote || "",
-          });
           if (data.shippingRates) setShippingRates(data.shippingRates);
           if (data.activePaymentMethods) setActivePaymentMethods(data.activePaymentMethods);
           if (data.bankAccounts) setBankAccounts(data.bankAccounts);
@@ -79,12 +46,6 @@ export default function SettingsPage() {
     load();
   }, [toast]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -92,7 +53,7 @@ export default function SettingsPage() {
       const res = await fetch("/api/admin/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, shippingRates, activePaymentMethods, bankAccounts }),
+        body: JSON.stringify({ shippingRates, activePaymentMethods, bankAccounts }),
       });
       if (res.ok) {
         toast("Settings saved successfully");
@@ -168,64 +129,6 @@ export default function SettingsPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
-          {/* Brand */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 space-y-5">
-            <h2 className="font-medium text-[#1A1A1A] text-sm uppercase tracking-widest">Brand</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-              <div>
-                <label className="text-[#666] text-xs block mb-1.5">Brand Name</label>
-                <input name="brandName" value={form.brandName} onChange={handleChange} className={inputClass} />
-              </div>
-              <div>
-                <label className="text-[#666] text-xs block mb-1.5">Currency</label>
-                <select name="currency" value={form.currency} onChange={handleChange} className={inputClass}>
-                  <option value="USD">USD ($)</option>
-                  <option value="EUR">EUR (€)</option>
-                  <option value="GBP">GBP (£)</option>
-                  <option value="NGN">NGN (₦)</option>
-                </select>
-              </div>
-              <div className="sm:col-span-2">
-                <label className="text-[#666] text-xs block mb-1.5">Tagline</label>
-                <input name="tagline" value={form.tagline} onChange={handleChange} className={inputClass} placeholder="Your brand's tagline" />
-              </div>
-            </div>
-          </div>
-
-          {/* Contact */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 space-y-5">
-            <h2 className="font-medium text-[#1A1A1A] text-sm uppercase tracking-widest">Contact Information</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-              <div>
-                <label className="text-[#666] text-xs block mb-1.5">Email Address</label>
-                <input name="contactEmail" type="email" value={form.contactEmail} onChange={handleChange} className={inputClass} placeholder="hello@janes.com" />
-              </div>
-              <div>
-                <label className="text-[#666] text-xs block mb-1.5">Phone Number</label>
-                <input name="contactPhone" value={form.contactPhone} onChange={handleChange} className={inputClass} placeholder="+1 234 567 8900" />
-              </div>
-              <div className="sm:col-span-2">
-                <label className="text-[#666] text-xs block mb-1.5">Showroom Address</label>
-                <textarea name="contactAddress" rows={2} value={form.contactAddress} onChange={handleChange} className={inputClass + " resize-none"} placeholder="24 Victoria Island Crescent, Lagos, Nigeria" />
-              </div>
-            </div>
-          </div>
-
-          {/* Social */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 space-y-5">
-            <h2 className="font-medium text-[#1A1A1A] text-sm uppercase tracking-widest">Social & Shipping</h2>
-            <div className="space-y-4 sm:space-y-5">
-              <div>
-                <label className="text-[#666] text-xs block mb-1.5">Instagram URL</label>
-                <input name="instagramUrl" value={form.instagramUrl} onChange={handleChange} className={inputClass} placeholder="https://instagram.com/janes" />
-              </div>
-              <div>
-                <label className="text-[#666] text-xs block mb-1.5">Shipping Note</label>
-                <textarea name="shippingNote" rows={3} value={form.shippingNote} onChange={handleChange} className={inputClass + " resize-none"} placeholder="Displayed on product pages..." />
-              </div>
-            </div>
-          </div>
-
           {/* Payment Methods */}
           <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 space-y-5">
             <h2 className="font-medium text-[#1A1A1A] text-sm uppercase tracking-widest">Payment Methods</h2>

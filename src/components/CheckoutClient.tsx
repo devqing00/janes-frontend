@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "./CartProvider";
 import { useSiteSettings } from "./SiteSettingsProvider";
+import { useAuth } from "./AuthProvider";
+import { useLocale } from "./LocaleProvider";
 
 interface ShippingRate {
   _key?: string;
@@ -75,33 +77,33 @@ interface SavedCheckout {
   delivery: DeliveryForm;
 }
 
-const PAYMENT_METHODS: Record<PaymentMethodKey, { label: string; desc: string; icon: React.ReactNode }> = {
-  paystack: {
-    label: "Pay with Paystack",
-    desc: "Secure card & bank payment",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5">
-        <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M2 10h20" stroke="currentColor" strokeWidth="1.5" />
-      </svg>
-    ),
-  },
-  bank_transfer: {
-    label: "Direct Bank Transfer",
-    desc: "Transfer to our bank account",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5">
-        <path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v8m4-8v8m4-8v8m4-8v8m4-8v8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
+const PAYMENT_ICONS: Record<PaymentMethodKey, React.ReactNode> = {
+  paystack: (
+    <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5">
+      <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M2 10h20" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  ),
+  bank_transfer: (
+    <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5">
+      <path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v8m4-8v8m4-8v8m4-8v8m4-8v8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
 };
 
 export default function CheckoutClient() {
   const { items, total } = useCart();
   const router = useRouter();
-  const { formatPrice } = useSiteSettings();
-  const fmtPrice = (n: number) => formatPrice(n);
+  const { formatNGN } = useSiteSettings();
+  const { user } = useAuth();
+  const { t } = useLocale();
+  // Checkout always charges in NGN — never convert to display currency
+  const fmtPrice = (n: number) => formatNGN(n);
+
+  const PAYMENT_METHODS: Record<PaymentMethodKey, { label: string; desc: string; icon: React.ReactNode }> = {
+    paystack: { label: t("checkout.payWithPaystack"), desc: t("checkout.paystackDesc"), icon: PAYMENT_ICONS.paystack },
+    bank_transfer: { label: t("checkout.bankTransfer"), desc: t("checkout.bankTransferDesc"), icon: PAYMENT_ICONS.bank_transfer },
+  };
 
   const [email, setEmail] = useState("");
   const [deliveryStep, setDeliveryStep] = useState<DeliveryStep>("empty");
@@ -146,6 +148,35 @@ export default function CheckoutClient() {
       // ignore corrupt storage
     }
   }, []);
+
+  // Autofill from Firebase profile (takes priority over localStorage)
+  useEffect(() => {
+    if (!user) return;
+    // If user has saved shipping info, pre-fill the form
+    const hasProfile = user.firstName || user.lastName || user.address;
+    if (hasProfile) {
+      const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ");
+      const profileDelivery: DeliveryForm = {
+        name: fullName || delivery.name,
+        line1: user.address || delivery.line1,
+        line2: "",
+        city: user.city || delivery.city,
+        state: user.state || delivery.state,
+        country: user.country || delivery.country,
+        postalCode: delivery.postalCode,
+      };
+      setSavedCheckout({
+        email: user.email || "",
+        delivery: profileDelivery,
+      });
+      setShowAutofill(true);
+    }
+    // Pre-fill email from Firebase
+    if (user.email && !email) {
+      setEmail(user.email);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const applyAutofill = () => {
     if (!savedCheckout) return;
@@ -230,6 +261,27 @@ export default function CheckoutClient() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ email, delivery: draft }));
     } catch { /* quota exceeded or private mode — silently skip */ }
+    // Save shipping info to user profile if signed in
+    if (user) {
+      const nameParts = draft.name.split(" ");
+      import("@/lib/firebase").then(({ auth }) => {
+        auth.currentUser?.getIdToken().then((token) => {
+          fetch("/api/auth/profile", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({
+              firstName: nameParts[0] || "",
+              lastName: nameParts.slice(1).join(" ") || "",
+              phone: "",
+              address: draft.line1,
+              city: draft.city,
+              state: draft.state,
+              country: draft.country,
+            }),
+          }).catch(() => {});
+        });
+      });
+    }
   };
 
   const cancelDelivery = () =>
@@ -267,7 +319,7 @@ export default function CheckoutClient() {
       });
       if (!res.ok) {
         const err = await res.json();
-        setSubmitError(err.error ?? "Something went wrong. Please try again.");
+        setSubmitError(err.error ?? t("checkout.errorGeneric"));
         return;
       }
       const data = await res.json();
@@ -281,7 +333,7 @@ export default function CheckoutClient() {
         window.location.href = data.authorizationUrl;
       }
     } catch {
-      setSubmitError("Network error. Please check your connection and try again.");
+      setSubmitError(t("checkout.errorNetwork"));
     } finally {
       setSubmitting(false);
     }
@@ -290,9 +342,9 @@ export default function CheckoutClient() {
   if (!items.length) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-6">
-        <p className="font-serif text-2xl text-[#1A1A1A] mb-3">Your bag is empty</p>
+        <p className="font-serif text-2xl text-[#1A1A1A] mb-3">{t("checkout.emptyMessage")}</p>
         <Link href="/shop" className="text-[10px] uppercase tracking-[0.2em] text-[#C08A6F] hover:underline mt-2">
-          Continue Shopping
+          {t("common.continueShopping")}
         </Link>
       </div>
     );
@@ -303,7 +355,7 @@ export default function CheckoutClient() {
 
       {/* LEFT: Checkout steps */}
       <form onSubmit={handlePay} className="space-y-7 order-2 lg:order-1">
-        <h1 className="font-serif text-2xl text-[#1A1A1A]">Checkout</h1>
+        <h1 className="font-serif text-2xl text-[#1A1A1A]">{t("checkout.heading")}</h1>
 
         {/* Autofill banner */}
         {showAutofill && savedCheckout && (
@@ -316,7 +368,7 @@ export default function CheckoutClient() {
               </span>
               <div className="min-w-0">
                 <p className="text-[12px] font-medium text-[#1A1A1A]">
-                  Use saved details for{" "}
+                  {t("checkout.autofillPrompt")}{" "}
                   <span className="text-[#C08A6F]">{savedCheckout.delivery.name}</span>?
                 </p>
                 <p className="text-[11px] text-[#999] mt-0.5 truncate">
@@ -327,7 +379,7 @@ export default function CheckoutClient() {
                   onClick={applyAutofill}
                   className="mt-2 text-[10px] uppercase tracking-[0.15em] text-white bg-[#C08A6F] hover:bg-[#a8755c] px-4 py-1.5 transition-colors"
                 >
-                  Autofill Details
+                  {t("checkout.autofillButton")}
                 </button>
               </div>
             </div>
@@ -346,7 +398,7 @@ export default function CheckoutClient() {
 
         {/* Email */}
         <div>
-          <SectionLabel>Email Address</SectionLabel>
+          <SectionLabel>{t("checkout.emailLabel")}</SectionLabel>
           <input
             type="email" required value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -358,11 +410,11 @@ export default function CheckoutClient() {
         {/* Delivery Details */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <p className="text-[15px] font-semibold text-[#1A1A1A]">Delivery Details</p>
+            <p className="text-[15px] font-semibold text-[#1A1A1A]">{t("checkout.deliveryHeading")}</p>
             {deliveryStep === "done" && (
               <button type="button" onClick={openDeliveryForm}
                 className="text-[10px] uppercase tracking-[0.15em] text-[#C08A6F] hover:underline">
-                Edit
+                {t("common.edit")}
               </button>
             )}
           </div>
@@ -371,7 +423,7 @@ export default function CheckoutClient() {
             <div className="border border-[#E8E2DB] bg-[#FAFAF9] py-6 flex items-center justify-center">
               <button type="button" onClick={openDeliveryForm}
                 className="text-[13px] font-semibold text-[#1A1A1A] border border-[#1A1A1A] px-8 py-2.5 hover:bg-[#1A1A1A] hover:text-white transition-colors">
-                Add delivery details
+                {t("checkout.addDelivery")}
               </button>
             </div>
           )}
@@ -379,53 +431,53 @@ export default function CheckoutClient() {
           {deliveryStep === "editing" && (
             <div className="border border-[#C08A6F] bg-white p-5 space-y-3">
               <div>
-                <label className="block text-[11px] text-[#666] mb-1">Full Name <span className="text-[#C08A6F]">*</span></label>
+                <label className="block text-[11px] text-[#666] mb-1">{t("checkout.fullName")} <span className="text-[#C08A6F]">*</span></label>
                 <input value={draft.name} onChange={(e) => draftChange("name", e.target.value)} placeholder="Jane Smith"
                   className={`${inputCls} ${draftErrors.name ? "border-red-400" : ""}`} />
                 {draftErrors.name && <p className="text-red-500 text-[10px] mt-0.5">{draftErrors.name}</p>}
               </div>
               <div>
-                <label className="block text-[11px] text-[#666] mb-1">Address Line 1 <span className="text-[#C08A6F]">*</span></label>
+                <label className="block text-[11px] text-[#666] mb-1">{t("checkout.addressLine1")} <span className="text-[#C08A6F]">*</span></label>
                 <input value={draft.line1} onChange={(e) => draftChange("line1", e.target.value)} placeholder="24 Victoria Island Crescent"
                   className={`${inputCls} ${draftErrors.line1 ? "border-red-400" : ""}`} />
                 {draftErrors.line1 && <p className="text-red-500 text-[10px] mt-0.5">{draftErrors.line1}</p>}
               </div>
               <div>
-                <label className="block text-[11px] text-[#666] mb-1">Address Line 2 <span className="text-[#999]">(optional)</span></label>
+                <label className="block text-[11px] text-[#666] mb-1">{t("checkout.addressLine2")} <span className="text-[#999]">{t("checkout.optional")}</span></label>
                 <input value={draft.line2} onChange={(e) => draftChange("line2", e.target.value)} placeholder="Apartment, floor, suite…" className={inputCls} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] text-[#666] mb-1">City <span className="text-[#C08A6F]">*</span></label>
+                  <label className="block text-[11px] text-[#666] mb-1">{t("checkout.city")} <span className="text-[#C08A6F]">*</span></label>
                   <input value={draft.city} onChange={(e) => draftChange("city", e.target.value)} placeholder="Lagos"
                     className={`${inputCls} ${draftErrors.city ? "border-red-400" : ""}`} />
                   {draftErrors.city && <p className="text-red-500 text-[10px] mt-0.5">{draftErrors.city}</p>}
                 </div>
                 <div>
-                  <label className="block text-[11px] text-[#666] mb-1">State</label>
+                  <label className="block text-[11px] text-[#666] mb-1">{t("checkout.state")}</label>
                   <input value={draft.state} onChange={(e) => draftChange("state", e.target.value)} placeholder="Lagos State" className={inputCls} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] text-[#666] mb-1">Country <span className="text-[#C08A6F]">*</span></label>
+                  <label className="block text-[11px] text-[#666] mb-1">{t("checkout.country")} <span className="text-[#C08A6F]">*</span></label>
                   <input value={draft.country} onChange={(e) => draftChange("country", e.target.value)} placeholder="Nigeria"
                     className={`${inputCls} ${draftErrors.country ? "border-red-400" : ""}`} />
                   {draftErrors.country && <p className="text-red-500 text-[10px] mt-0.5">{draftErrors.country}</p>}
                 </div>
                 <div>
-                  <label className="block text-[11px] text-[#666] mb-1">Postal Code</label>
+                  <label className="block text-[11px] text-[#666] mb-1">{t("checkout.postalCode")}</label>
                   <input value={draft.postalCode} onChange={(e) => draftChange("postalCode", e.target.value)} placeholder="100001" className={inputCls} />
                 </div>
               </div>
               <div className="flex gap-3 pt-1">
                 <button type="button" onClick={saveDelivery}
                   className="flex-1 bg-[#1A1A1A] text-white text-[11px] uppercase tracking-[0.15em] py-3 hover:bg-[#C08A6F] transition-colors">
-                  Save Details
+                  {t("checkout.saveDetails")}
                 </button>
                 <button type="button" onClick={cancelDelivery}
                   className="px-5 text-[11px] uppercase tracking-[0.15em] text-[#666] border border-[#E8E2DB] hover:text-[#1A1A1A] hover:border-[#1A1A1A] transition-colors">
-                  Cancel
+                  {t("common.cancel")}
                 </button>
               </div>
             </div>
@@ -447,7 +499,7 @@ export default function CheckoutClient() {
         {/* Order note */}
         <div>
           <label className="block text-[13px] font-medium text-[#C08A6F] mb-2 tracking-wide">
-            Order Note
+            {t("checkout.orderNote")}
           </label>
           <textarea
             value={note} onChange={(e) => setNote(e.target.value)} rows={3}
@@ -460,23 +512,23 @@ export default function CheckoutClient() {
         <div>
           <div className="flex items-center justify-between mb-2">
             <p className="text-[13px] font-bold uppercase tracking-[0.12em] text-[#1A1A1A]">
-              Shipping Method
+              {t("checkout.shippingMethod")}
             </p>
             {shippingStep === "done" && (
               <button type="button" onClick={() => setShippingStep("selecting")}
                 className="text-[10px] uppercase tracking-[0.15em] text-[#C08A6F] hover:underline">
-                Change
+                {t("common.change")}
               </button>
             )}
           </div>
 
           {shippingStep === "empty" && (
             <div className="border border-[#E8E2DB] bg-[#FAFAF9] p-5 space-y-3">
-              <p className="text-center text-[12px] text-[#999]">Choose your preferred delivery option</p>
+              <p className="text-center text-[12px] text-[#999]">{t("checkout.shippingPrompt")}</p>
               <div className="flex justify-center">
                 <button type="button" onClick={() => setShippingStep("selecting")}
                   className="text-[11px] font-bold uppercase tracking-[0.2em] border border-[#1A1A1A] px-8 py-3 hover:bg-[#1A1A1A] hover:text-white transition-colors">
-                  Select Shipping Method
+                  {t("checkout.selectShipping")}
                 </button>
               </div>
             </div>
@@ -529,7 +581,7 @@ export default function CheckoutClient() {
 
         {/* Payment Method */}
         <div>
-          <SectionLabel>Payment Method</SectionLabel>
+          <SectionLabel>{t("checkout.paymentMethod")}</SectionLabel>
           {methodsLoading ? (
             <div className="border border-[#E8E2DB] bg-[#FAFAF9] p-6 flex items-center justify-center gap-2 text-[#999] text-sm">
               <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
@@ -590,13 +642,13 @@ export default function CheckoutClient() {
           {/* Bank details preview when bank_transfer selected */}
           {selectedMethod === "bank_transfer" && bankAccounts.length > 0 && (
             <div className="mt-3 border border-[#E8E2DB] bg-[#FAFAF9] p-4 space-y-3">
-              <p className="text-[10px] uppercase tracking-[0.15em] text-[#999]">Transfer to any of the following accounts</p>
+              <p className="text-[10px] uppercase tracking-[0.15em] text-[#999]">{t("checkout.bankAccountsHeading")}</p>
               {bankAccounts.map((acct, i) => (
                 <div key={i} className="text-sm text-[#1A1A1A] space-y-0.5">
                   <p className="font-medium">{acct.bankName}</p>
                   <p className="text-[#666] text-[12px]">{acct.accountName}</p>
                   <p className="text-[#666] text-[12px] font-mono tracking-wide">{acct.accountNumber}</p>
-                  {acct.sortCode && <p className="text-[#999] text-[11px]">Sort code: {acct.sortCode}</p>}
+                  {acct.sortCode && <p className="text-[#999] text-[11px]">{t("checkout.sortCode")} {acct.sortCode}</p>}
                 </div>
               ))}
             </div>
@@ -614,36 +666,34 @@ export default function CheckoutClient() {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
               </svg>
-              {selectedMethod === "bank_transfer" ? "Placing Order\u2026" : "Redirecting to Paystack\u2026"}
+              {selectedMethod === "bank_transfer" ? t("checkout.placingOrder") : t("checkout.redirecting")}
             </>
           ) : canPay ? (
-            selectedMethod === "bank_transfer"
-              ? `Place Order \u2013 ${fmtPrice(grandTotal)}`
-              : `Pay ${fmtPrice(grandTotal)} with Paystack`
+              selectedMethod === "bank_transfer" ? `${t("checkout.placeOrder")} ${fmtPrice(grandTotal)}` : t("checkout.payAmount", { amount: fmtPrice(grandTotal) })
           ) : (
-            "Complete all steps to continue"
+            t("checkout.incomplete")
           )}
         </button>
 
         {!canPay && !submitting && (
           <div className="flex flex-col gap-1.5">
-            {!email.includes("@") && <Hint>Enter your email address</Hint>}
-            {deliveryStep !== "done" && <Hint>Add your delivery details</Hint>}
-            {shippingStep !== "done" && <Hint>Select a shipping rate</Hint>}
-            {!hasMethod && <Hint>Choose a payment method</Hint>}
+            {!email.includes("@") && <Hint>{t("checkout.hintEmail")}</Hint>}
+            {deliveryStep !== "done" && <Hint>{t("checkout.hintDelivery")}</Hint>}
+            {shippingStep !== "done" && <Hint>{t("checkout.hintShipping")}</Hint>}
+            {!hasMethod && <Hint>{t("checkout.hintPayment")}</Hint>}
           </div>
         )}
 
         <p className="text-[#bbb] text-[10px] text-center">
           {selectedMethod === "bank_transfer"
-            ? "After placing your order you\u2019ll receive bank details to complete your transfer."
-            : "You\u2019ll be redirected to Paystack to complete payment securely."}
+            ? t("checkout.bankNote")
+            : t("checkout.paystackNote")}
         </p>
       </form>
 
       {/* RIGHT: Order summary */}
       <div className="order-1 lg:order-2 lg:sticky lg:top-28">
-        <h2 className="text-[10px] uppercase tracking-[0.2em] text-[#666] mb-5">Order Summary</h2>
+        <h2 className="text-[10px] uppercase tracking-[0.2em] text-[#666] mb-5">{t("checkout.summaryHeading")}</h2>
         <div className="space-y-4 mb-5">
           {items.map((item) => (
             <div key={item._id + (item.size ?? "")} className="flex gap-3.5">
@@ -666,7 +716,7 @@ export default function CheckoutClient() {
               <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
                 <div className="min-w-0">
                   <p className="text-[13px] text-[#1A1A1A] leading-tight truncate">{item.name}</p>
-                  {item.size && <p className="text-[11px] text-[#999] mt-0.5">Size: {item.size}</p>}
+                  {item.size && <p className="text-[11px] text-[#999] mt-0.5">{t("checkout.size")} {item.size}</p>}
                 </div>
                 <p className="text-[13px] text-[#1A1A1A] flex-shrink-0">{fmtPrice(item.price * item.quantity)}</p>
               </div>
@@ -675,23 +725,23 @@ export default function CheckoutClient() {
         </div>
         <div className="border-t border-[#E8E2DB] pt-4 space-y-2">
           <div className="flex justify-between text-[13px] text-[#666]">
-            <span>Subtotal</span><span>{fmtPrice(total)}</span>
+            <span>{t("checkout.subtotal")}</span><span>{fmtPrice(total)}</span>
           </div>
           <div className="flex justify-between text-[13px]">
-            <span className="text-[#666]">Shipping</span>
+            <span className="text-[#666]">{t("checkout.shippingLabel")}</span>
             {selectedRate
               ? <span className="text-[#1A1A1A]">{fmtPrice(selectedRate.price)}</span>
-              : <span className="text-[#bbb] italic text-[12px]">Select rate</span>
+              : <span className="text-[#bbb] italic text-[12px]">{t("checkout.selectRate")}</span>
             }
           </div>
           <div className="flex justify-between text-[15px] font-semibold text-[#1A1A1A] pt-3 border-t border-[#E8E2DB]">
-            <span>Total</span>
+            <span>{t("checkout.total")}</span>
             <span>{fmtPrice(selectedRate ? grandTotal : total)}</span>
           </div>
         </div>
         {note.trim() && (
           <div className="mt-4 pt-4 border-t border-[#E8E2DB]">
-            <p className="text-[10px] uppercase tracking-[0.15em] text-[#C08A6F] mb-1">Your note</p>
+            <p className="text-[10px] uppercase tracking-[0.15em] text-[#C08A6F] mb-1">{t("checkout.yourNote")}</p>
             <p className="text-[12px] text-[#666] italic leading-relaxed">&ldquo;{note}&rdquo;</p>
           </div>
         )}

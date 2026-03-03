@@ -2,42 +2,41 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useSiteSettings } from "./SiteSettingsProvider";
+import { useLocale } from "@/components/LocaleProvider";
 
-const footerLinks = {
-  shop: [
-    { label: "Womenswear", href: "/shop?category=Womenswear" },
-    { label: "Menswear", href: "/shop?category=Menswear" },
-    { label: "Raw Fabrics", href: "/shop?category=Fabrics" },
-    { label: "New Arrivals", href: "/shop" },
-  ],
-  company: [
-    { label: "About Us", href: "/about" },
-    { label: "Collections", href: "/collections" },
-    { label: "Lookbook", href: "/lookbook" },
-    { label: "Contact", href: "/contact" },
-  ],
-  help: [
-    { label: "FAQ", href: "/faq" },
-    { label: "Shipping & Returns", href: "/shipping" },
-    { label: "Privacy Policy", href: "/privacy" },
-    { label: "Terms of Service", href: "/terms" },
-  ],
-};
-
-const socials: { label: string; href: string }[] = [];
+const socials: { label: string; href: string }[] = [
+  { label: "Instagram", href: "https://instagram.com/janes" },
+];
 
 export default function Footer() {
+  const { t } = useLocale();
   const [nlEmail, setNlEmail] = useState("");
   const [nlStatus, setNlStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
-  const { instagramUrl } = useSiteSettings();
 
-  const dynamicSocials = [
-    ...(instagramUrl ? [{ label: "Instagram", href: instagramUrl }] : []),
-    ...socials,
-  ];
+  const footerLinks = {
+    shop: [
+      { label: t("categories.womenswear"), href: "/shop?category=Womenswear" },
+      { label: t("categories.menswear"), href: "/shop?category=Menswear" },
+      { label: t("categories.fabrics"), href: "/shop?category=Fabrics" },
+      { label: t("footer.newArrivals"), href: "/shop" },
+    ],
+    company: [
+      { label: t("nav.aboutUs"), href: "/about" },
+      { label: t("nav.collections"), href: "/collections" },
+      { label: t("nav.lookbook"), href: "/lookbook" },
+      { label: t("nav.contact"), href: "/contact" },
+    ],
+    help: [
+      { label: t("nav.faq"), href: "/faq" },
+      { label: t("nav.shippingReturns"), href: "/shipping" },
+      { label: t("footer.privacyPolicy"), href: "/privacy" },
+      { label: t("footer.termsOfService"), href: "/terms" },
+    ],
+  };
+
+  const dynamicSocials = socials;
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,24 +67,24 @@ export default function Footer() {
           <div className="grid grid-cols-12 gap-8 items-center">
             <div className="col-span-12 md:col-span-5">
               <p className="text-white/40 uppercase text-[10px] tracking-[0.25em] mb-3">
-                Stay Connected
+                {t("footer.newsletterLabel")}
               </p>
               <h3 className="font-serif text-2xl md:text-3xl leading-snug">
-                Be part of{" "}
+                {t("footer.newsletterHeading1")}{" "}
                 <span className="italic font-normal text-[#C08A6F]">
-                  timeless
+                  {t("footer.newsletterHeading2")}
                 </span>{" "}
-                fashion
+                {t("footer.newsletterHeading3")}
               </h3>
             </div>
             <div className="col-span-12 md:col-span-6 md:col-start-7 min-w-0">
               {nlStatus === "success" ? (
                 <div className="py-4">
                   <p className="text-[#C08A6F] text-sm">
-                    Thank you for subscribing!
+                    {t("footer.newsletterSuccess")}
                   </p>
                   <p className="text-white/30 text-xs mt-1">
-                    You&apos;ll hear from us soon.
+                    {t("footer.newsletterSuccessSub")}
                   </p>
                 </div>
               ) : (
@@ -96,7 +95,7 @@ export default function Footer() {
                   >
                     <div className="flex-1 min-w-0">
                       <label className="text-white/30 uppercase text-[9px] tracking-widest block mb-2">
-                        Email Address
+                        {t("footer.emailLabel")}
                       </label>
                       <input
                         type="email"
@@ -112,13 +111,13 @@ export default function Footer() {
                       disabled={nlStatus === "loading"}
                       className="bg-[#C08A6F] text-white uppercase text-[10px] tracking-[0.2em] px-6 py-3 hover:bg-[#C08A6F]/90 transition-all shrink-0 disabled:opacity-50"
                     >
-                      {nlStatus === "loading" ? "Subscribing..." : "Subscribe"}
+                      {nlStatus === "loading" ? t("footer.subscribing") : t("footer.subscribe")}
                     </button>
                   </form>
                   <p className="text-white/20 text-[10px] mt-3">
                     {nlStatus === "error"
-                      ? "Something went wrong. Please try again."
-                      : "No spam. Unsubscribe at any time."}
+                      ? t("footer.newsletterError")
+                      : t("footer.newsletterDisclaimer")}
                   </p>
                 </>
               )}
@@ -139,8 +138,7 @@ export default function Footer() {
               JANES
             </Link>
             <p className="text-white/40 text-xs leading-relaxed mt-4 max-w-xs">
-              Luxurious and contemporary fashion crafted with passion, precision
-              and purpose. Designed for the modern individual.
+              {t("footer.brandDescription")}
             </p>
             <div className="flex gap-5 mt-6">
               {dynamicSocials.map((s) => (
@@ -160,7 +158,7 @@ export default function Footer() {
           {/* Shop links */}
           <div className="col-span-1 md:col-span-2 md:col-start-6">
             <p className="text-white/60 uppercase text-[10px] tracking-[0.2em] mb-5">
-              Shop
+              {t("footer.shopColumn")}
             </p>
             <ul className="space-y-3">
               {footerLinks.shop.map((link) => (
@@ -179,7 +177,7 @@ export default function Footer() {
           {/* Company links */}
           <div className="col-span-1 md:col-span-2">
             <p className="text-white/60 uppercase text-[10px] tracking-[0.2em] mb-5">
-              The House
+              {t("footer.theHouse")}
             </p>
             <ul className="space-y-3">
               {footerLinks.company.map((link) => (
@@ -198,7 +196,7 @@ export default function Footer() {
           {/* Help links */}
           <div className="col-span-1 md:col-span-2">
             <p className="text-white/60 uppercase text-[10px] tracking-[0.2em] mb-5">
-              Client Care
+              {t("footer.clientCare")}
             </p>
             <ul className="space-y-3">
               {footerLinks.help.map((link) => (
@@ -220,20 +218,20 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="mx-auto max-w-[1440px] px-6 md:px-12 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-white/25 text-[10px] uppercase tracking-widest">
-            &copy; {new Date().getFullYear()} JANES. All rights reserved.
+            &copy; {new Date().getFullYear()} JANES. {t("footer.copyright", { year: new Date().getFullYear().toString() })}
           </p>
           <div className="flex gap-6">
             <Link
               href="/privacy"
               className="text-white/25 text-[10px] uppercase tracking-widest hover:text-white/50 transition-colors"
             >
-              Privacy
+              {t("nav.privacy")}
             </Link>
             <Link
               href="/terms"
               className="text-white/25 text-[10px] uppercase tracking-widest hover:text-white/50 transition-colors"
             >
-              Terms
+              {t("nav.terms")}
             </Link>
           </div>
         </div>

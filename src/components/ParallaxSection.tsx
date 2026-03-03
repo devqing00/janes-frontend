@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useRef } from "react";
+import { useLocale } from "@/components/LocaleProvider";
 
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=1400&q=80";
 
@@ -22,6 +23,7 @@ export default function ParallaxSection({
   ctaText,
   ctaLink,
 }: ParallaxSectionProps) {
+  const { t } = useLocale();
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -30,9 +32,9 @@ export default function ParallaxSection({
   const y = useTransform(scrollYProgress, [0, 1], ["-10%", "10%"]);
 
   const bgImage = image || FALLBACK_IMAGE;
-  const sub = subtitle || "Our Philosophy";
-  const head = heading || "Fashion that transcends the ordinary";
-  const cta = ctaText || "Our Story";
+  const sub = subtitle || t("home.parallaxSubtitle");
+  const head = heading || t("home.parallaxHeading");
+  const cta = ctaText || t("home.parallaxCta");
   const link = ctaLink || "/about";
 
   return (
@@ -40,7 +42,7 @@ export default function ParallaxSection({
       <motion.div className="absolute inset-[-10%]" style={{ y }}>
         <Image
           src={bgImage}
-          alt="Fashion editorial"
+          alt={t("hero.imageAlt")}
           fill
           className="object-cover"
           sizes="100vw"

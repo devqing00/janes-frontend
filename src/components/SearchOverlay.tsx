@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearch } from "./SearchProvider";
 import { useSiteSettings } from "./SiteSettingsProvider";
+import { useLocale } from "@/components/LocaleProvider";
 
 interface SearchResult {
   _id: string;
@@ -19,6 +20,7 @@ interface SearchResult {
 export default function SearchOverlay() {
   const { isOpen, closeSearch } = useSearch();
   const { formatPrice } = useSiteSettings();
+  const { t } = useLocale();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -88,9 +90,9 @@ export default function SearchOverlay() {
   }, [closeSearch]);
 
   const categoryLabels: Record<string, string> = {
-    womenswear: "Womenswear",
-    menswear: "Menswear",
-    fabrics: "Raw Fabrics",
+    womenswear: t("categories.womenswear"),
+    menswear: t("categories.menswear"),
+    fabrics: t("categories.fabrics"),
   };
 
   return (
@@ -109,7 +111,7 @@ export default function SearchOverlay() {
             <button
               onClick={closeSearch}
               className="text-white/60 hover:text-white transition-colors p-1"
-              aria-label="Close search"
+              aria-label={t("search.closeSearch")}
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -128,7 +130,7 @@ export default function SearchOverlay() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search our collections..."
+                placeholder={t("search.placeholder")}
                 className="w-full bg-transparent border-b border-white/20 pb-4 pl-8 text-white text-xl md:text-2xl placeholder:text-white/30 focus:outline-none focus:border-[#C08A6F] transition-colors"
               />
             </div>
@@ -152,13 +154,13 @@ export default function SearchOverlay() {
 
             {!loading && searched && results.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-white/40 text-sm">No results found for &ldquo;{query}&rdquo;</p>
+                <p className="text-white/40 text-sm">{t("search.noResults")} &ldquo;{query}&rdquo;</p>
                 <Link
                   href="/shop"
                   onClick={closeSearch}
                   className="text-[#C08A6F] text-xs uppercase tracking-[0.15em] mt-3 inline-block hover:underline"
                 >
-                  Explore the Collection
+                  {t("search.exploreCta")}
                 </Link>
               </div>
             )}
@@ -186,7 +188,7 @@ export default function SearchOverlay() {
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-white/20 text-[8px]">
-                          No Image
+                          {t("common.noImage")}
                         </div>
                       )}
                     </div>
@@ -208,16 +210,21 @@ export default function SearchOverlay() {
           {/* Quick links */}
           <div className="max-w-2xl mx-auto w-full px-6 pb-8 pt-4">
             <div className="border-t border-white/10 pt-4">
-              <p className="text-white/20 text-[10px] uppercase tracking-widest mb-3">Quick Links</p>
+              <p className="text-white/20 text-[10px] uppercase tracking-widest mb-3">{t("search.quickLinks")}</p>
               <div className="flex flex-wrap gap-3">
-                {["Womenswear", "Menswear", "Fabrics", "Collections"].map((link) => (
+                {[
+                  { label: t("categories.womenswear"), href: "/shop?category=womenswear" },
+                  { label: t("categories.menswear"), href: "/shop?category=menswear" },
+                  { label: t("categories.fabrics"), href: "/shop?category=fabrics" },
+                  { label: t("nav.collections"), href: "/collections" },
+                ].map((link) => (
                   <Link
-                    key={link}
-                    href={link === "Collections" ? "/collections" : `/shop?category=${link.toLowerCase()}`}
+                    key={link.href}
+                    href={link.href}
                     onClick={closeSearch}
                     className="text-white/40 text-xs hover:text-[#C08A6F] transition-colors"
                   >
-                    {link}
+                    {link.label}
                   </Link>
                 ))}
               </div>

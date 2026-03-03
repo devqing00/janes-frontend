@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import { client } from "@/lib/sanity";
+import { writeClient } from "@/lib/sanity";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(
   _request: Request,
@@ -8,7 +10,7 @@ export async function GET(
   const { reference } = await params;
 
   try {
-    const order = await client.fetch(
+    const order = await writeClient.fetch(
       `*[_type == "order" && reference == $reference][0] {
         _id,
         _createdAt,

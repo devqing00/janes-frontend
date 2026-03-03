@@ -2,14 +2,17 @@
 
 import { motion } from "framer-motion";
 import PageHero from "@/components/PageHero";
+import { useLocale } from "@/components/LocaleProvider";
 
 export default function PrivacyPage() {
+  const { t } = useLocale();
+
   return (
     <>
       <PageHero
-        title="Privacy"
-        titleItalic="Policy"
-        subtitle="Legal"
+        title={t("privacy.title")}
+        titleItalic={t("privacy.titleItalic")}
+        subtitle={t("privacy.subtitle")}
       />
 
       <section className="bg-[#FAF8F5] py-24 md:py-36">
@@ -21,99 +24,63 @@ export default function PrivacyPage() {
             transition={{ duration: 0.7 }}
           >
             <p className="text-[#666] text-xs uppercase tracking-widest mb-12">
-              Last updated: March 2026
+              {t("privacy.lastUpdated")}
             </p>
 
             <div className="space-y-12 text-[#666] text-sm leading-relaxed">
               <div>
                 <h2 className="font-serif text-[#1A1A1A] text-2xl md:text-3xl mb-4">
-                  Information We Collect
+                  {t("privacy.s1Heading")}
                 </h2>
-                <p>
-                  When you visit JANES, we collect certain information about your device,
-                  your interaction with our site, and information necessary to process your
-                  purchases. We may also collect additional information if you contact us
-                  for customer support.
-                </p>
-                <p className="mt-4">
-                  Personal information we collect includes: name, email address, shipping
-                  address, payment information, and phone number when provided.
-                </p>
+                <p>{t("privacy.s1p1")}</p>
+                <p className="mt-4">{t("privacy.s1p2")}</p>
               </div>
 
               <div>
                 <h2 className="font-serif text-[#1A1A1A] text-2xl md:text-3xl mb-4">
-                  How We Use Your Information
+                  {t("privacy.s2Heading")}
                 </h2>
                 <ul className="space-y-2 mt-4">
-                  <li className="flex items-start gap-3">
-                    <span className="text-[#C08A6F] mt-1">—</span>
-                    To fulfill orders and process transactions
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="text-[#C08A6F] mt-1">—</span>
-                    To communicate with you about your order
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="text-[#C08A6F] mt-1">—</span>
-                    To send marketing communications (with your consent)
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="text-[#C08A6F] mt-1">—</span>
-                    To improve our website and services
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="text-[#C08A6F] mt-1">—</span>
-                    To comply with legal obligations
-                  </li>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <li key={n} className="flex items-start gap-3">
+                      <span className="text-[#C08A6F] mt-1">—</span>
+                      {t(`privacy.s2i${n}`)}
+                    </li>
+                  ))}
                 </ul>
               </div>
 
               <div>
                 <h2 className="font-serif text-[#1A1A1A] text-2xl md:text-3xl mb-4">
-                  Cookies
+                  {t("privacy.s3Heading")}
                 </h2>
-                <p>
-                  We use cookies and similar technologies to provide a better experience,
-                  analyse traffic, and for personalisation. You can manage your cookie
-                  preferences through your browser settings.
-                </p>
+                <p>{t("privacy.s3p")}</p>
               </div>
 
               <div>
                 <h2 className="font-serif text-[#1A1A1A] text-2xl md:text-3xl mb-4">
-                  Data Security
+                  {t("privacy.s4Heading")}
                 </h2>
-                <p>
-                  We implement appropriate technical and organisational measures to protect
-                  your personal data against unauthorised access, alteration, disclosure,
-                  or destruction. Payment processing is handled securely through our
-                  third-party payment provider.
-                </p>
+                <p>{t("privacy.s4p")}</p>
               </div>
 
               <div>
                 <h2 className="font-serif text-[#1A1A1A] text-2xl md:text-3xl mb-4">
-                  Your Rights
+                  {t("privacy.s5Heading")}
                 </h2>
-                <p>
-                  You have the right to access, correct, or delete your personal information.
-                  You may also opt out of marketing communications at any time by clicking
-                  the unsubscribe link in our emails or contacting us directly.
-                </p>
+                <p>{t("privacy.s5p")}</p>
               </div>
 
               <div>
                 <h2 className="font-serif text-[#1A1A1A] text-2xl md:text-3xl mb-4">
-                  Contact
+                  {t("privacy.s6Heading")}
                 </h2>
                 <p>
-                  For questions about this privacy policy or our data practices, please
-                  contact us at{" "}
+                  {t("privacy.s6p").split("privacy@janes.com")[0]}
                   <a href="mailto:privacy@janes.com" className="text-[#C08A6F] hover:underline">
                     privacy@janes.com
                   </a>
-                  .
+                  {t("privacy.s6p").split("privacy@janes.com")[1]}
                 </p>
               </div>
             </div>

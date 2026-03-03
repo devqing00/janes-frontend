@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/auth";
-import { client, writeClient } from "@/lib/sanity";
+import { writeClient } from "@/lib/sanity";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const session = await getAdminSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const orders = await client.fetch(
+  const orders = await writeClient.fetch(
     `*[_type == "order"] | order(_createdAt desc) {
       _id,
       _createdAt,
@@ -39,7 +41,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "orderId and status are required" }, { status: 400 });
     }
 
-    const validStatuses = ["pending", "awaiting_payment", "success", "failed", "processing", "shipped", "delivered"];
+    const validStatuses = ["pending", "awaiting_payment", "success", "failed", "processing", "shipped", "delivered", "refunded", "disputed"];
     if (!validStatuses.includes(status)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }

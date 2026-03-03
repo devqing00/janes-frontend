@@ -3,36 +3,34 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import PageHero from "@/components/PageHero";
 import { useSiteSettings } from "@/components/SiteSettingsProvider";
 import { useLocale } from "@/components/LocaleProvider";
 
-const categoryLabels: Record<string, string> = {
-  All: "All",
-  womenswear: "Womenswear",
-  menswear: "Menswear",
-  fabrics: "Raw Fabrics",
-};
-const subcategories = [
-  "All",
-  "Agbada",
-  "Kaftan",
-  "Ankara",
-  "Aso-Oke",
-  "Two-Piece",
-  "Tops",
-  "Dresses",
-  "Trousers",
-] as const;
+interface CategoryRef {
+  _id: string;
+  title: string;
+  slug: string;
+  level: number;
+}
+
+interface CategoryTreeItem {
+  _id: string;
+  title: string;
+  slug: string;
+  level: number;
+  parent?: { _id: string; slug: string } | null;
+}
 
 interface Product {
   _id: string;
   name: string;
   slug: string;
-  category: string;
-  subcategory?: string;
+  category: CategoryRef | null;
+  subcategory?: CategoryRef | null;
+  tags?: CategoryRef[];
   price: number;
   comparePrice?: number;
   inStock?: boolean;
@@ -57,37 +55,37 @@ const cardVariants = {
 export default function ShopPageClient() {
   const searchParams = useSearchParams();
   const urlCategory = searchParams.get("category") || "All";
-  const [categories, setCategories] = useState<string[]>(["All"]);
+  const urlSubcategory = searchParams.get("subcategory") || "All";
+
+  const [categoryTree, setCategoryTree] = useState<CategoryTreeItem[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>(urlCategory);
-  const [activeSub, setActiveSub] = useState<string>("All");
+  const [activeSub, setActiveSub] = useState<string>(urlSubcategory);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(12);
   const { formatPrice } = useSiteSettings();
   const { t } = useLocale();
 
-  // Fetch dynamic categories
+  // Fetch the full category tree
   useEffect(() => {
-    async function fetchCategories() {
+    async function fetchTree() {
       try {
-        const res = await fetch("/api/products?categories=true");
+        const res = await fetch("/api/products?categoryTree=true");
         if (res.ok) {
-          const cats: string[] = await res.json();
-          setCategories(["All", ...cats]);
+          const tree: CategoryTreeItem[] = await res.json();
+          setCategoryTree(tree);
         }
-      } catch {
-        // keep default
-      }
+      } catch { /* keep default */ }
     }
-    fetchCategories();
+    fetchTree();
   }, []);
 
-  // Sync category from URL on mount
+  // Sync from URL on mount
   useEffect(() => {
     const cat = searchParams.get("category") || "All";
-    if (cat !== "All") {
-      setActiveCategory(cat);
-    }
+    if (cat !== "All") setActiveCategory(cat);
+    const sub = searchParams.get("subcategory") || "All";
+    if (sub !== "All") setActiveSub(sub);
   }, [searchParams]);
 
   useEffect(() => {
@@ -107,12 +105,23 @@ export default function ShopPageClient() {
     fetchProducts();
   }, []);
 
+  // Derive main categories and subcategories from the tree
+  const mainCategories = useMemo(
+    () => categoryTree.filter((c) => c.level === 1),
+    [categoryTree]
+  );
+  const subCategories = useMemo(() => {
+    if (activeCategory === "All") return [];
+    const parentCat = categoryTree.find((c) => c.level === 1 && c.slug === activeCategory);
+    if (!parentCat) return [];
+    return categoryTree.filter((c) => c.level === 2 && c.parent?._id === parentCat._id);
+  }, [categoryTree, activeCategory]);
+
   const filtered = products.filter((p) => {
-    const catMatch =
-      activeCategory === "All" || p.category === activeCategory;
-    const subMatch =
-      activeSub === "All" ||
-      p.subcategory?.toLowerCase() === activeSub.toLowerCase();
+    const catSlug = p.category?.slug || "";
+    const subSlug = p.subcategory?.slug || "";
+    const catMatch = activeCategory === "All" || catSlug === activeCategory;
+    const subMatch = activeSub === "All" || subSlug === activeSub;
     return catMatch && subMatch;
   });
 
@@ -133,38 +142,55 @@ export default function ShopPageClient() {
           <div className="mb-12 md:mb-16 space-y-6">
             {/* Category filter */}
             <div className="flex flex-wrap gap-3">
-              {categories.map((cat) => (
+              <button
+                onClick={() => { setActiveCategory("All"); setActiveSub("All"); }}
+                className={`uppercase text-[10px] tracking-[0.2em] px-6 py-2.5 border transition-all ${
+                  activeCategory === "All"
+                    ? "bg-brand-text text-white border-brand-text"
+                    : "bg-transparent text-brand-text border-brand-text/20 hover:border-brand-text/50"
+                }`}
+              >
+                All
+              </button>
+              {mainCategories.map((cat) => (
                 <button
-                  key={cat}
-                  onClick={() => {
-                    setActiveCategory(cat);
-                    setActiveSub("All");
-                  }}
+                  key={cat._id}
+                  onClick={() => { setActiveCategory(cat.slug); setActiveSub("All"); }}
                   className={`uppercase text-[10px] tracking-[0.2em] px-6 py-2.5 border transition-all ${
-                    activeCategory === cat
+                    activeCategory === cat.slug
                       ? "bg-brand-text text-white border-brand-text"
                       : "bg-transparent text-brand-text border-brand-text/20 hover:border-brand-text/50"
                   }`}
                 >
-                  {t(`categories.${cat}`) !== `categories.${cat}` ? t(`categories.${cat}`) : cat.charAt(0).toUpperCase() + cat.slice(1)}
+                  {cat.title}
                 </button>
               ))}
             </div>
 
             {/* Subcategory filter */}
-            {activeCategory !== "fabrics" && (
+            {subCategories.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {subcategories.map((sub) => (
+                <button
+                  onClick={() => setActiveSub("All")}
+                  className={`uppercase text-[9px] tracking-[0.15em] px-4 py-2 border transition-all ${
+                    activeSub === "All"
+                      ? "bg-brand-accent text-white border-brand-accent"
+                      : "bg-transparent text-brand-muted border-brand-text/10 hover:border-brand-accent/50"
+                  }`}
+                >
+                  All
+                </button>
+                {subCategories.map((sub) => (
                   <button
-                    key={sub}
-                    onClick={() => setActiveSub(sub)}
+                    key={sub._id}
+                    onClick={() => setActiveSub(sub.slug)}
                     className={`uppercase text-[9px] tracking-[0.15em] px-4 py-2 border transition-all ${
-                      activeSub === sub
+                      activeSub === sub.slug
                         ? "bg-brand-accent text-white border-brand-accent"
                         : "bg-transparent text-brand-muted border-brand-text/10 hover:border-brand-accent/50"
                     }`}
                   >
-                    {sub}
+                    {sub.title}
                   </button>
                 ))}
               </div>
@@ -239,7 +265,7 @@ export default function ShopPageClient() {
                       </div>
                       <div className="mt-4">
                         <p className="text-brand-muted uppercase text-[9px] tracking-widest">
-                          {t(`categories.${item.category}`) !== `categories.${item.category}` ? t(`categories.${item.category}`) : item.category}
+                          {item.category?.title || "Uncategorized"}
                         </p>
                         <p className="text-brand-text text-sm mt-1">{item.name}</p>
                         <div className="flex items-center gap-2 mt-1">

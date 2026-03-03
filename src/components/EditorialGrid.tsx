@@ -13,9 +13,9 @@ const LAYOUT = [
 ];
 
 const FALLBACK_ITEMS = [
-  { image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=800&q=80", title: "The Art of Draping", category: "Editorial" },
-  { image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&q=80", title: "Bold Colour", category: "Trend Report" },
-  { image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=600&q=80", title: "Structured Ease", category: "Styling" },
+  { image: "https://images.unsplash.com/photo-1590735213920-68192a487bc2?w=800&q=80", title: "The Art of Draping", category: "Editorial" },
+  { image: "https://images.unsplash.com/photo-1606722590583-6951b5ea92ad?w=600&q=80", title: "Bold Colour", category: "Trend Report" },
+  { image: "https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=600&q=80", title: "Structured Ease", category: "Styling" },
 ];
 
 export interface EditorialItemData {
@@ -31,9 +31,9 @@ export interface EditorialGridProps {
 export default function EditorialGrid({ items }: EditorialGridProps) {
   const { t } = useLocale();
   const editorialItems = items && items.length > 0 ? items : [
-    { image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=800&q=80", title: t("home.editorialItem1Title"), category: t("home.editorialItem1Category") },
-    { image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&q=80", title: t("home.editorialItem2Title"), category: t("home.editorialItem2Category") },
-    { image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=600&q=80", title: t("home.editorialItem3Title"), category: t("home.editorialItem3Category") },
+    { image: "https://images.unsplash.com/photo-1590735213920-68192a487bc2?w=800&q=80", title: t("home.editorialItem1Title"), category: t("home.editorialItem1Category") },
+    { image: "https://images.unsplash.com/photo-1606722590583-6951b5ea92ad?w=600&q=80", title: t("home.editorialItem2Title"), category: t("home.editorialItem2Category") },
+    { image: "https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=600&q=80", title: t("home.editorialItem3Title"), category: t("home.editorialItem3Category") },
   ];
   return (
     <section className="bg-[#FAF8F5] py-24 md:py-36">

@@ -4,13 +4,25 @@ import ConfirmModal from "@/components/admin/ConfirmModal";
 import ImageUpload, { type UploadedImage } from "@/components/admin/ImageUpload";
 import { useToast } from "@/components/admin/Toast";
 import { useRouter, useParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import useSWR from "swr";
+
+interface CategoryItem {
+  _id: string;
+  title: string;
+  slug: string;
+  level: number;
+  parent?: { _id: string; slug: string } | null;
+}
+
+const catFetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export default function EditProductPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
   const { toast } = useToast();
+  const { data: allCategories = [] } = useSWR<CategoryItem[]>("/api/admin/categories", catFetcher);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -21,14 +33,32 @@ export default function EditProductPage() {
   const [form, setForm] = useState({
     name: "",
     slug: "",
-    category: "womenswear",
-    subcategory: "",
+    categoryId: "",
+    subcategoryId: "",
+    tagIds: [] as string[],
     price: "",
     description: "",
     details: "",
     sizes: "",
     status: "draft",
   });
+
+  const mainCategories = useMemo(() => allCategories.filter((c) => c.level === 1), [allCategories]);
+  const subCategories = useMemo(
+    () => allCategories.filter((c) => c.level === 2 && c.parent?._id === form.categoryId),
+    [allCategories, form.categoryId]
+  );
+  const tags = useMemo(
+    () => allCategories.filter((c) => c.level === 3 && c.parent?._id === form.subcategoryId),
+    [allCategories, form.subcategoryId]
+  );
+
+  const toggleTag = (tagId: string) => {
+    setForm((prev) => ({
+      ...prev,
+      tagIds: prev.tagIds.includes(tagId) ? prev.tagIds.filter((tid) => tid !== tagId) : [...prev.tagIds, tagId],
+    }));
+  };
 
   useEffect(() => {
     async function load() {
@@ -39,8 +69,9 @@ export default function EditProductPage() {
           setForm({
             name: data.name || "",
             slug: data.slug || "",
-            category: data.category || "Womenswear",
-            subcategory: data.subcategory || "",
+            categoryId: data.categoryId || "",
+            subcategoryId: data.subcategoryId || "",
+            tagIds: Array.isArray(data.tagIds) ? data.tagIds : [],
             price: String(data.price || ""),
             description: data.description || "",
             details: data.details || "",
@@ -78,7 +109,13 @@ export default function EditProductPage() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+      ...(name === "categoryId" ? { subcategoryId: "", tagIds: [] } : {}),
+      ...(name === "subcategoryId" ? { tagIds: [] } : {}),
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -224,18 +261,37 @@ export default function EditProductPage() {
               </div>
               <div>
                 <label className="text-[#666] text-xs block mb-1.5">Category</label>
-                <select name="category" value={form.category} onChange={handleChange} className={inputClass}>
-                  <option value="womenswear">Womenswear</option>
-                  <option value="menswear">Menswear</option>
-                  <option value="fabrics">Raw Fabrics</option>
+                <select name="categoryId" value={form.categoryId} onChange={handleChange} className={inputClass} required>
+                  <option value="">— Select —</option>
+                  {mainCategories.map((c) => (
+                    <option key={c._id} value={c._id}>{c.title}</option>
+                  ))}
                 </select>
               </div>
               <div>
                 <label className="text-[#666] text-xs block mb-1.5">Subcategory</label>
-                <input name="subcategory" value={form.subcategory} onChange={handleChange} className={inputClass} />
+                <select name="subcategoryId" value={form.subcategoryId} onChange={handleChange} className={inputClass}>
+                  <option value="">— Select —</option>
+                  {subCategories.map((c) => (
+                    <option key={c._id} value={c._id}>{c.title}</option>
+                  ))}
+                </select>
               </div>
+              {tags.length > 0 && (
+                <div className="sm:col-span-2">
+                  <label className="text-[#666] text-xs block mb-1.5">Tags</label>
+                  <div className="flex flex-wrap gap-2">
+                    {tags.map((tag) => (
+                      <button key={tag._id} type="button" onClick={() => toggleTag(tag._id)}
+                        className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${form.tagIds.includes(tag._id) ? "bg-[#C08A6F] text-white border-[#C08A6F]" : "bg-white text-[#666] border-gray-200 hover:border-[#C08A6F]"}`}>
+                        {tag.title}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div>
-                <label className="text-[#666] text-xs block mb-1.5">Price (USD)</label>
+                <label className="text-[#666] text-xs block mb-1.5">Price (NGN)</label>
                 <input name="price" type="number" required value={form.price} onChange={handleChange} className={inputClass} />
               </div>
               <div>

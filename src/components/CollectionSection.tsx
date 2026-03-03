@@ -9,22 +9,22 @@ import { useLocale } from "@/components/LocaleProvider";
 /* ── Fallback data ── */
 const FALLBACK_COLLECTIONS = [
   {
-    title: "Spring / Summer",
+    title: "Harmattan",
     year: "2026",
-    image: "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?w=800&q=80",
-    slug: "ss-2026",
+    image: "https://images.unsplash.com/photo-1590735213920-68192a487bc2?w=800&q=80",
+    slug: "harmattan-2026",
   },
   {
-    title: "Autumn / Winter",
+    title: "Festive",
     year: "2025",
-    image: "https://images.unsplash.com/photo-1548624313-0396c75e4b1a?w=800&q=80",
-    slug: "aw-2025",
+    image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&q=80",
+    slug: "festive-2025",
   },
   {
-    title: "Resort",
+    title: "Dry Season",
     year: "2025",
-    image: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=80",
-    slug: "resort-2025",
+    image: "https://images.unsplash.com/photo-1617137968427-85924c800a22?w=800&q=80",
+    slug: "dry-season-2025",
   },
 ];
 

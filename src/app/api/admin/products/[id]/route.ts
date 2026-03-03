@@ -11,7 +11,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   try {
     const product = await writeClient.fetch(
       `*[_type == "product" && _id == $id][0] {
-        _id, name, slug, price, category, subcategory, description, details, sizes, status, _createdAt,
+        _id, name, slug, price, description, details, sizes, status, _createdAt,
+        "categoryId": category._ref,
+        "subcategoryId": subcategory._ref,
+        "tagIds": tags[]._ref,
         "images": images[]{asset->{ _id, url }}
       }`,
       { id }
@@ -24,6 +27,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       slug: product.slug?.current || "",
       sizes: (product.sizes || []).join(", "),
       details: (product.details || []).join("\n"),
+      tagIds: product.tagIds || [],
     });
   } catch (err) {
     console.error("Failed to fetch product:", err);
@@ -39,22 +43,37 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
   try {
     const body = await request.json();
-    const result = await writeClient
-      .patch(id)
-      .set({
-        name: body.name,
-        slug: { _type: "slug", current: body.slug },
-        price: Number(body.price),
-        category: body.category,
-        subcategory: body.subcategory || "",
-        description: body.description || "",
-        details: body.details ? body.details.split("\n").filter(Boolean) : [],
-        sizes: body.sizes ? body.sizes.split(",").map((s: string) => s.trim()) : [],
-        images: body.images || [],
-        status: body.status || "draft",
-      })
-      .commit();
+    const patch: Record<string, unknown> = {
+      name: body.name,
+      slug: { _type: "slug", current: body.slug },
+      price: Number(body.price),
+      description: body.description || "",
+      details: body.details ? body.details.split("\n").filter(Boolean) : [],
+      sizes: body.sizes ? body.sizes.split(",").map((s: string) => s.trim()) : [],
+      images: body.images || [],
+      status: body.status || "draft",
+    };
 
+    // Category reference
+    if (body.categoryId) {
+      patch.category = { _type: "reference", _ref: body.categoryId };
+    }
+    // Subcategory reference
+    if (body.subcategoryId) {
+      patch.subcategory = { _type: "reference", _ref: body.subcategoryId };
+    }
+    // Tags: array of references
+    if (Array.isArray(body.tagIds) && body.tagIds.length > 0) {
+      patch.tags = body.tagIds.map((tid: string, i: number) => ({
+        _type: "reference",
+        _ref: tid,
+        _key: `tag-${i}`,
+      }));
+    } else {
+      patch.tags = [];
+    }
+
+    const result = await writeClient.patch(id).set(patch).commit();
     return NextResponse.json(result);
   } catch (err) {
     console.error("Failed to update product:", err);

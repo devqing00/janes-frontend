@@ -17,32 +17,28 @@ const product = {
     },
     {
       name: "category",
-      title: "Category",
-      type: "string",
+      title: "Main Category",
+      type: "reference",
+      to: [{ type: "category" }],
       options: {
-        list: [
-          { title: "Womenswear", value: "womenswear" },
-          { title: "Menswear", value: "menswear" },
-          { title: "Fabrics", value: "fabrics" },
-        ],
+        filter: "level == 1",
       },
     },
     {
       name: "subcategory",
-      title: "Subcategory",
-      type: "string",
+      title: "Sub-section",
+      type: "reference",
+      to: [{ type: "category" }],
       options: {
-        list: [
-          { title: "Agbada", value: "agbada" },
-          { title: "Kaftan", value: "kaftan" },
-          { title: "Ankara", value: "ankara" },
-          { title: "Aso-Oke", value: "aso-oke" },
-          { title: "Two-Piece", value: "two-piece" },
-          { title: "Tops", value: "tops" },
-          { title: "Dresses", value: "dresses" },
-          { title: "Trousers", value: "trousers" },
-        ],
+        filter: "level == 2",
       },
+    },
+    {
+      name: "tags",
+      title: "Tags (Sub-sub-sections)",
+      type: "array",
+      of: [{ type: "reference", to: [{ type: "category" }] }],
+      description: "Level 3 category tags for this product",
     },
     {
       name: "price",

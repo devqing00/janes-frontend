@@ -6,55 +6,48 @@ import Image from "next/image";
 import Link from "next/link";
 import { useLocale } from "@/components/LocaleProvider";
 
-/* All known categories — always rendered, live ones become clickable */
-const CATEGORY_DATA: Record<string, { image: string; href: string; label: string }> = {
-  womenswear: {
-    label: "Womenswear",
-    image: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&q=80",
-    href: "/shop?category=womenswear",
-  },
-  menswear: {
-    label: "Menswear",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80",
-    href: "/shop?category=menswear",
-  },
-  fabrics: {
-    label: "Raw Fabrics",
-    image: "https://images.unsplash.com/photo-1558171813-4c088753af8f?w=600&q=80",
-    href: "/shop?category=fabrics",
-  },
+/* Placeholder images per-slug — used only when the Sanity category has no image */
+const PLACEHOLDER_IMAGES: Record<string, string> = {
+  womenswear: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600&q=80",
+  menswear: "https://images.unsplash.com/photo-1617137968427-85924c800a22?w=600&q=80",
+  "raw-fabrics": "https://images.unsplash.com/photo-1606722590583-6951b5ea92ad?w=600&q=80",
 };
 
-type CategoryItem = { key: string; title: string; image: string; href: string; live: boolean };
+interface CategoryFromAPI {
+  _id: string;
+  title: string;
+  slug: string;
+  image?: string;
+  productCount: number;
+}
+
+type CategoryItem = { _id: string; title: string; image: string; href: string; live: boolean };
 
 export default function CategoriesSection() {
   const { t } = useLocale();
-  const [items, setItems] = useState<CategoryItem[]>(
-    Object.entries(CATEGORY_DATA).map(([key, d]) => ({ key, title: d.label, image: d.image, href: d.href, live: false }))
-  );
+  const [items, setItems] = useState<CategoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchCategories() {
       try {
-        const res = await fetch("/api/products?categories=true", {
-          cache: "no-store",
-        });
+        const res = await fetch("/api/products?categories=true", { cache: "no-store" });
         if (res.ok) {
-          const activeCats: string[] = await res.json();
-          // Normalise to lowercase for a reliable comparison
-          const normalised = activeCats.map((c) => c.toLowerCase().trim());
+          const cats: CategoryFromAPI[] = await res.json();
           setItems(
-            Object.entries(CATEGORY_DATA).map(([key, d]) => ({
-              key,
-              title: d.label,
-              image: d.image,
-              href: d.href,
-              live: normalised.includes(key.toLowerCase()),
+            cats.map((c) => ({
+              _id: c._id,
+              title: c.title,
+              image: c.image || PLACEHOLDER_IMAGES[c.slug] || PLACEHOLDER_IMAGES["womenswear"],
+              href: `/shop?category=${c.slug}`,
+              live: c.productCount > 0,
             }))
           );
         }
       } catch (err) {
         console.error("[CategoriesSection] failed to fetch categories", err);
+      } finally {
+        setLoading(false);
       }
     }
     fetchCategories();
@@ -79,9 +72,13 @@ export default function CategoriesSection() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-          {items.map((cat, i) => (
+          {loading
+            ? Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="aspect-[4/5] bg-[#F5F0EB] animate-pulse rounded" />
+              ))
+            : items.map((cat, i) => (
             <motion.div
-              key={cat.key}
+              key={cat._id}
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-80px" }}
@@ -137,8 +134,7 @@ export default function CategoriesSection() {
               )}
             </motion.div>
           ))}
-        </div>
-      </div>
+        </div>      </div>
     </section>
   );
 }

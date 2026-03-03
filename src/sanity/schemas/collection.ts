@@ -19,7 +19,17 @@ const collection = {
       name: "season",
       title: "Season",
       type: "string",
-      description: 'e.g. "Spring / Summer"',
+      description: "Regional season for this collection",
+      options: {
+        list: [
+          { title: "Harmattan", value: "harmattan" },
+          { title: "Dry Season", value: "dry-season" },
+          { title: "Rainy Season", value: "rainy-season" },
+          { title: "Festive", value: "festive" },
+          { title: "Bridal", value: "bridal" },
+          { title: "Resort", value: "resort" },
+        ],
+      },
     },
     {
       name: "year",

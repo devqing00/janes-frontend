@@ -20,9 +20,9 @@ const reveal = {
 
 /* ── Fallback images ── */
 const FALLBACK_IMAGES = [
-  "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&q=80",
-  "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&q=80",
-  "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=600&q=80",
+  "https://images.unsplash.com/photo-1590735213920-68192a487bc2?w=600&q=80",
+  "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600&q=80",
+  "https://images.unsplash.com/photo-1617137968427-85924c800a22?w=600&q=80",
 ];
 
 export interface HeroProps {

@@ -31,7 +31,7 @@ export default function AdminProductsPage() {
     return matchSearch && matchCat;
   });
 
-  const categories = ["All", ...new Set(products.map((p) => p.category))];
+  const categories = ["All", ...new Set(products.map((p) => p.category).filter(Boolean))];
 
   return (
     <>

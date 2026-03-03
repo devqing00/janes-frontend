@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRef } from "react";
 import { useLocale } from "@/components/LocaleProvider";
 
-const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=1400&q=80";
+const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1590735213920-68192a487bc2?w=1400&q=80";
 
 export interface ParallaxSectionProps {
   image?: string;

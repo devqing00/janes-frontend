@@ -29,34 +29,41 @@ export default function Navbar() {
   const accountRef = useRef<HTMLDivElement>(null);
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
-  const [dynamicCats, setDynamicCats] = useState<string[]>([]);
+  const [categoryTree, setCategoryTree] = useState<{ _id: string; title: string; slug: string; level: number; parent?: { _id: string; slug: string } | null }[]>([]);
 
-  // Fetch dynamic product categories
+  // Fetch dynamic category tree
   useEffect(() => {
     async function fetchCats() {
       try {
-        const res = await fetch("/api/products?categories=true");
+        const res = await fetch("/api/products?categoryTree=true");
         if (res.ok) {
-          const cats: string[] = await res.json();
-          setDynamicCats(cats);
+          const tree = await res.json();
+          setCategoryTree(Array.isArray(tree) ? tree : []);
         }
       } catch { /* fallback: empty dropdown */ }
     }
     fetchCats();
   }, []);
 
-  // Build navLinks with dynamic shop dropdown
+  // Build navLinks with dynamic shop dropdown (hierarchical)
+  const shopDropdown = (() => {
+    const items: { label: string; href: string }[] = [{ label: t("common.viewAll"), href: "/shop" }];
+    const l1 = categoryTree.filter((c) => c.level === 1);
+    const l2 = categoryTree.filter((c) => c.level === 2);
+    l1.forEach((cat) => {
+      items.push({ label: cat.title, href: `/shop?category=${cat.slug}` });
+      l2.filter((sub) => sub.parent?._id === cat._id).forEach((sub) => {
+        items.push({ label: `  ${sub.title}`, href: `/shop?category=${cat.slug}&subcategory=${sub.slug}` });
+      });
+    });
+    return items;
+  })();
+
   const navLinks = [
     {
       label: t("nav.shop"),
       href: "/shop",
-      dropdown: [
-        { label: t("common.viewAll"), href: "/shop" },
-        ...dynamicCats.map((cat) => ({
-          label: t(`categories.${cat}`) !== `categories.${cat}` ? t(`categories.${cat}`) : cat.charAt(0).toUpperCase() + cat.slice(1),
-          href: `/shop?category=${cat}`,
-        })),
-      ],
+      dropdown: shopDropdown,
     },
     { label: t("nav.collections"), href: "/collections" },
     { label: t("nav.lookbook"), href: "/lookbook" },

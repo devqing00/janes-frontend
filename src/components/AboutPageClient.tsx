@@ -37,7 +37,7 @@ export default function AboutPageClient() {
               variants={fadeUp}
             >
               <Image
-                src="https://images.unsplash.com/photo-1558171813-4c088753af8f?w=800&q=80"
+                src="https://images.unsplash.com/photo-1606722590583-6951b5ea92ad?w=800&q=80"
                 alt="JANES atelier"
                 fill
                 className="object-cover"
@@ -156,7 +156,7 @@ export default function AboutPageClient() {
       {/* Full-width image break */}
       <section className="relative h-[50vh] md:h-[70vh] overflow-hidden">
         <Image
-          src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1400&q=80"
+          src="https://images.unsplash.com/photo-1590735213920-68192a487bc2?w=1400&q=80"
           alt={t("about.workshopImageAlt")}
           fill
           className="object-cover"

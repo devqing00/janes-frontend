@@ -60,7 +60,7 @@ export default function NewProductPage() {
               .replace(/(^-|-$)/g, ""),
           }
         : {}),
-      // Reset child selections when parent changes
+      // Reset child selections when parent changes 
       ...(name === "categoryId" ? { subcategoryId: "", tagIds: [] } : {}),
       ...(name === "subcategoryId" ? { tagIds: [] } : {}),
     }));

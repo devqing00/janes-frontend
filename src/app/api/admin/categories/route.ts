@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "title, slug and level are required" }, { status: 400 });
     }
 
-    const doc: Record<string, unknown> = {
+    const doc: { _type: string; [key: string]: unknown } = {
       _type: "category",
       title,
       slug: { _type: "slug", current: slug },

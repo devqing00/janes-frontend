@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const doc: Record<string, unknown> = {
+    const doc: { _type: string; [key: string]: unknown } = {
       _type: "product",
       name: body.name,
       slug: { _type: "slug", current: body.slug },

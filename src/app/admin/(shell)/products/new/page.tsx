@@ -107,6 +107,7 @@ export default function NewProductPage() {
         <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
           <button
             onClick={() => router.back()}
+            aria-label="Go back"
             className="text-[#666] hover:text-[#1A1A1A] transition-colors p-1"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -133,8 +134,8 @@ export default function NewProductPage() {
                 <input name="slug" required value={form.slug} onChange={handleChange} className={inputClass + " font-mono text-xs"} placeholder="cream-linen-kimono-set" />
               </div>
               <div>
-                <label className="text-[#666] text-xs block mb-1.5">Category</label>
-                <select name="categoryId" value={form.categoryId} onChange={handleChange} className={inputClass} required>
+                <label htmlFor="categoryId" className="text-[#666] text-xs block mb-1.5">Category</label>
+                <select id="categoryId" name="categoryId" value={form.categoryId} onChange={handleChange} className={inputClass} required>
                   <option value="">— Select —</option>
                   {mainCategories.map((c) => (
                     <option key={c._id} value={c._id}>{c.title}</option>
@@ -142,8 +143,8 @@ export default function NewProductPage() {
                 </select>
               </div>
               <div>
-                <label className="text-[#666] text-xs block mb-1.5">Subcategory</label>
-                <select name="subcategoryId" value={form.subcategoryId} onChange={handleChange} className={inputClass}>
+                <label htmlFor="subcategoryId" className="text-[#666] text-xs block mb-1.5">Subcategory</label>
+                <select id="subcategoryId" name="subcategoryId" value={form.subcategoryId} onChange={handleChange} className={inputClass}>
                   <option value="">— Select —</option>
                   {subCategories.map((c) => (
                     <option key={c._id} value={c._id}>{c.title}</option>
@@ -193,8 +194,8 @@ export default function NewProductPage() {
           {/* Status & submit */}
           <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <label className="text-[#666] text-xs">Status:</label>
-              <select name="status" value={form.status} onChange={handleChange} className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C08A6F] transition-colors bg-white">
+              <label htmlFor="status" className="text-[#666] text-xs">Status:</label>
+              <select id="status" name="status" value={form.status} onChange={handleChange} className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C08A6F] transition-colors bg-white">
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>
               </select>

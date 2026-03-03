@@ -104,7 +104,7 @@ export default function Hero({
       {/* Animated vertical accent line */}
       <motion.div
         aria-hidden="true"
-        className="absolute right-12 top-0 w-px bg-gradient-to-b from-transparent via-brand-accent/30 to-transparent z-[2] hidden lg:block"
+        className="absolute right-12 top-0 w-px bg-linear-to-b from-transparent via-brand-accent/30 to-transparent z-[2] hidden lg:block"
         initial={{ height: 0, opacity: 0 }}
         animate={{ height: "100%", opacity: 1 }}
         transition={{ delay: 1.2, duration: 1.5, ease: "easeOut" }}
@@ -113,7 +113,7 @@ export default function Hero({
       {/* Animated horizontal accent line */}
       <motion.div
         aria-hidden="true"
-        className="absolute left-0 top-[28%] h-px bg-gradient-to-r from-transparent via-brand-accent/20 to-transparent z-[2] hidden lg:block"
+        className="absolute left-0 top-[28%] h-px bg-linear-to-r from-transparent via-brand-accent/20 to-transparent z-[2] hidden lg:block"
         initial={{ width: 0, opacity: 0 }}
         animate={{ width: "45%", opacity: 1 }}
         transition={{ delay: 1.4, duration: 1.4, ease: "easeOut" }}

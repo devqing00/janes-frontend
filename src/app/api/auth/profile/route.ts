@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { adminAuth } from "@/lib/firebase-admin";
 import { writeClient } from "@/lib/sanity";
 
+export const dynamic = "force-dynamic";
+
 /**
  * POST /api/auth/profile
  * Verifies Firebase ID token, creates/updates customer in Sanity, returns profile.

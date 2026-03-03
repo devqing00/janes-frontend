@@ -57,7 +57,7 @@ export default function PageHero({
       {/* Animated vertical accent line */}
       <motion.div
         aria-hidden="true"
-        className="absolute right-12 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-brand-accent/20 to-transparent hidden lg:block"
+        className="absolute right-12 top-0 bottom-0 w-px bg-linear-to-b from-transparent via-brand-accent/20 to-transparent hidden lg:block"
         initial={{ scaleY: 0, opacity: 0 }}
         animate={{ scaleY: 1, opacity: 1 }}
         transition={{ delay: 0.6, duration: 1.2, ease: "easeOut" }}
@@ -67,7 +67,7 @@ export default function PageHero({
       {/* Animated horizontal accent line */}
       <motion.div
         aria-hidden="true"
-        className="absolute left-0 bottom-0 h-px bg-gradient-to-r from-brand-accent/30 via-brand-accent/10 to-transparent"
+        className="absolute left-0 bottom-0 h-px bg-linear-to-r from-brand-accent/30 via-brand-accent/10 to-transparent"
         initial={{ width: 0, opacity: 0 }}
         animate={{ width: "60%", opacity: 1 }}
         transition={{ delay: 0.5, duration: 1.0, ease: "easeOut" }}
@@ -115,7 +115,7 @@ export default function PageHero({
 
         {/* Decorative accent line */}
         <motion.div
-          className="mt-10 h-px bg-gradient-to-r from-brand-accent/60 to-transparent"
+          className="mt-10 h-px bg-linear-to-r from-brand-accent/60 to-transparent"
           initial={{ width: 0 }}
           animate={{ width: "3rem" }}
           transition={{ duration: 0.7, delay: 0.55, ease: "easeOut" }}

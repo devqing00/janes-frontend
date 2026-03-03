@@ -106,7 +106,7 @@ function CollectionCard({ collection, index }: { collection: CollectionItem; ind
               sizes="(max-width: 768px) 100vw, 33vw"
             />
           </motion.div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/10 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
             <p className="text-white/50 uppercase text-[10px] tracking-[0.2em] mb-2">{collection.year || ""}</p>
             <h3 className="font-serif text-white text-2xl md:text-3xl leading-tight">{collection.title}</h3>

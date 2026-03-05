@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 // Common projection that dereferences category references
 const PRODUCT_LIST_PROJ = `{
-  _id, name, "slug": slug.current, price, priceType, priceMax, comparePrice, inStock, featured, status,
+  _id, name, "slug": slug.current, price, priceType, priceMax, comparePrice, inStock, featured, status, _createdAt,
   isFabricVariant,
   "category": category->{ _id, title, "slug": slug.current, level },
   "subcategory": subcategory->{ _id, title, "slug": slug.current, level },

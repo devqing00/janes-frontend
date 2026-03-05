@@ -21,6 +21,7 @@ interface FeaturedProduct {
   _createdAt?: string;
   isFabricVariant?: boolean;
   tags?: Array<{
+    slug?: string;
     fabricPrice?: number;
     fabricPricePerN?: number;
     fabricUnit?: string;
@@ -53,10 +54,12 @@ export default function FeaturedProducts() {
   useEffect(() => {
     async function fetchFeatured() {
       try {
-        const res = await fetch("/api/products?featured=true");
+        const res = await fetch("/api/products?limit=5&page=1");
         if (res.ok) {
           const data = await res.json();
-          setProducts(Array.isArray(data) ? data.slice(0, 5) : []);
+          // API returns { products, total } when limit is set
+          const list = Array.isArray(data) ? data : Array.isArray(data.products) ? data.products : [];
+          setProducts(list.slice(0, 5));
         }
       } catch (err) {
         console.error("Failed to fetch featured products:", err);
@@ -107,7 +110,7 @@ export default function FeaturedProducts() {
           ease: [0.25, 0.46, 0.45, 0.94],
         }}
       >
-        <Link href={isFabric ? `/shop/fabric-group/${item.tags?.[0] && "slug" in item.tags[0] ? (item.tags[0] as Record<string, string>).slug : item.slug}` : `/shop/${item.slug}`} className="block h-full">
+        <Link href={isFabric && item.tags?.[0]?.slug ? `/shop/fabric-group/${item.tags[0].slug}` : `/shop/${item.slug}`} className="block h-full">
           <div className="relative overflow-hidden h-full bg-[#F5F0EB]">
             {item.image ? (
               <Image

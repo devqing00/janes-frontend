@@ -42,7 +42,10 @@ interface Order {
   note?: string;
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json()).then((d) => d.orders ?? d);
+const fetcher = (url: string) =>
+  fetch(url)
+    .then((r) => r.json())
+    .then((d) => (Array.isArray(d.orders) ? d.orders : Array.isArray(d) ? d : []));
 
 const STATUS_LABELS: Record<string, { label: string; classes: string }> = {
   success: { label: "Paid", classes: "bg-green-50 text-green-700 border border-green-200" },

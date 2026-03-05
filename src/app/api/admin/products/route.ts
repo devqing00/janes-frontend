@@ -9,9 +9,11 @@ export async function GET() {
   try {
     const products = await writeClient.fetch(
       `*[_type == "product"] | order(_createdAt desc) {
-        _id, name, slug, price, status, _createdAt,
+        _id, name, slug, price, priceType, priceMax, status, _createdAt,
+        isFabricVariant,
         "category": category->title,
-        "imageUrl": images[0].asset->url
+        "imageUrl": images[0].asset->url,
+        "tag": tags[0]->{ title, "slug": slug.current, fabricPrice, fabricPricePerN, fabricUnit }
       }`
     );
     return NextResponse.json(products);
@@ -29,15 +31,22 @@ export async function POST(request: Request) {
     const body = await request.json();
     const doc: { _type: string; [key: string]: unknown } = {
       _type: "product",
-      name: body.name,
+      name: body.name || "",
       slug: { _type: "slug", current: body.slug },
-      price: Number(body.price),
+      priceType: body.priceType || "single",
+      price: Number(body.price) || 0,
       description: body.description || "",
       details: body.details ? body.details.split("\n").filter(Boolean) : [],
-      sizes: body.sizes ? body.sizes.split(",").map((s: string) => s.trim()) : [],
+      sizes: body.sizes ? body.sizes.split(",").map((s: string) => s.trim()).filter(Boolean) : [],
       images: body.images || [],
       status: body.status || "draft",
+      isFabricVariant: body.isFabricVariant === true,
     };
+
+    // Max price for range pricing
+    if (body.priceType === "range" && body.priceMax) {
+      doc.priceMax = Number(body.priceMax);
+    }
 
     // Category reference (level 1)
     if (body.categoryId) {

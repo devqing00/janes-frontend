@@ -42,7 +42,7 @@ interface Order {
   note?: string;
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
+const fetcher = (url: string) => fetch(url).then((r) => r.json()).then((d) => d.orders ?? d);
 
 const STATUS_LABELS: Record<string, { label: string; classes: string }> = {
   success: { label: "Paid", classes: "bg-green-50 text-green-700 border border-green-200" },
@@ -112,9 +112,9 @@ export default function AdminOrdersPage() {
   return (
     <div className="max-w-7xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-xl font-medium text-brand-text">Orders</h1>
+          <h1 className="text-xl sm:text-2xl font-medium text-brand-text">Orders</h1>
           <p className="text-sm text-[#999] mt-0.5">
             {orders.length} order{orders.length !== 1 ? "s" : ""} total
           </p>
@@ -154,7 +154,7 @@ export default function AdminOrdersPage() {
       })()}
 
       {/* Filter tabs */}
-      <div className="flex gap-1 mb-6 border-b border-brand-border">
+      <div className="flex gap-1 mb-6 border-b border-brand-border overflow-x-auto scrollbar-hide">
         {(["all", "success", "pending", "awaiting_payment", "failed"] as const).map((tab) => (
           <button
             key={tab}

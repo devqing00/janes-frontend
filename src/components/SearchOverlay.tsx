@@ -104,6 +104,9 @@ export default function SearchOverlay() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
           className="fixed inset-0 z-[400] bg-[#232323]/95 backdrop-blur-md flex flex-col"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("search.title")}
         >
           {/* Header */}
           <div className="flex items-center justify-between px-6 md:px-12 py-5 max-w-[1440px] mx-auto w-full">
@@ -166,9 +169,9 @@ export default function SearchOverlay() {
             )}
 
             {!loading && results.length > 0 && (
-              <div className="space-y-1">
+              <div className="space-y-1" aria-live="polite">
                 <p className="text-white/30 text-[10px] uppercase tracking-widest mb-4">
-                  {results.length} result{results.length !== 1 ? "s" : ""}
+                  {results.length} {results.length !== 1 ? t("search.results") : t("search.result")}
                 </p>
                 {results.map((product) => (
                   <Link

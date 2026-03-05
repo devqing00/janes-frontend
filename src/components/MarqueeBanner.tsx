@@ -1,18 +1,22 @@
 "use client";
 
+import { useLocale } from "@/components/LocaleProvider";
+
 export default function MarqueeBanner() {
+  const { t } = useLocale();
+
   const items = [
-    "NEW ARRIVALS",
+    t("marquee.newArrivals"),
     "✦",
-    "CRAFTED IN LAGOS",
+    t("marquee.craftedInLagos"),
     "✦",
-    "FREE SHIPPING OVER ₦500,000",
+    t("marquee.freeShipping"),
     "✦",
-    "LUXURIOUS & CONTEMPORARY",
+    t("marquee.luxuriousContemporary"),
     "✦",
-    "HANDWOVEN ASO-OKE",
+    t("marquee.handwovenAsoOke"),
     "✦",
-    "DESIGNED FOR YOU",
+    t("marquee.designedForYou"),
     "✦",
   ];
 

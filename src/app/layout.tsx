@@ -16,14 +16,52 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "JANES — Luxurious & Contemporary Fashion",
+  title: {
+    default: "JANES — Premium Nigerian Fashion Brand",
+    template: "%s | JANES",
+  },
   description:
-    "Premium fashion portfolio and e-commerce platform featuring womenswear, menswear, and raw fabrics by JANES.",
+    "Shop JANES — Nigeria's premium contemporary fashion brand. Discover Ankara fabrics, Aso-Oke collections, womenswear, menswear, and bespoke African print designs. Delivered across Lagos and Nigeria.",
+  keywords: [
+    "Nigerian fashion brand",
+    "African fashion Nigeria",
+    "Ankara fabric online",
+    "Aso-Oke collection",
+    "Nigerian designer clothing",
+    "Lagos fashion brand",
+    "African print dresses",
+    "Nigerian womenswear",
+    "buy fabric Nigeria",
+    "premium African fashion",
+    "JANES fashion",
+    "Nigerian clothing store",
+    "Adire fabric Nigeria",
+    "Nigerian wedding attire",
+  ],
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://janes.com"),
   openGraph: {
-    title: "JANES — Luxurious & Contemporary Fashion",
-    description: "Premium fashion for the modern individual.",
+    title: "JANES — Premium Nigerian Fashion Brand",
+    description: "Nigeria's premier contemporary fashion brand. Shop Ankara, Aso-Oke, womenswear & bespoke African designs.",
     siteName: "JANES",
     type: "website",
+    locale: "en_NG",
+    url: "/",
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: "JANES Fashion" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "JANES — Premium Nigerian Fashion Brand",
+    description: "Nigeria's premier contemporary fashion brand. Shop Ankara, Aso-Oke & bespoke African designs.",
+    images: ["/og-image.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
+  },
+  alternates: { canonical: "/" },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "",
   },
 };
 

@@ -195,10 +195,11 @@ export default function ContactPageClient({ contactInfo }: ContactPageClientProp
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
-                      <label className="text-brand-muted uppercase text-[9px] tracking-widest block mb-2">
+                      <label htmlFor="contact-name" className="text-brand-muted uppercase text-[9px] tracking-widest block mb-2">
                         {t("contact.nameLabel")}
                       </label>
                       <input
+                        id="contact-name"
                         type="text"
                         required
                         value={formData.name}
@@ -207,10 +208,11 @@ export default function ContactPageClient({ contactInfo }: ContactPageClientProp
                       />
                     </div>
                     <div>
-                      <label className="text-brand-muted uppercase text-[9px] tracking-widest block mb-2">
+                      <label htmlFor="contact-email" className="text-brand-muted uppercase text-[9px] tracking-widest block mb-2">
                         {t("contact.emailLabel")}
                       </label>
                       <input
+                        id="contact-email"
                         type="email"
                         required
                         value={formData.email}
@@ -220,10 +222,11 @@ export default function ContactPageClient({ contactInfo }: ContactPageClientProp
                     </div>
                   </div>
                   <div>
-                    <label className="text-brand-muted uppercase text-[9px] tracking-widest block mb-2">
+                    <label htmlFor="contact-subject" className="text-brand-muted uppercase text-[9px] tracking-widest block mb-2">
                       {t("contact.subjectLabel")}
                     </label>
                     <input
+                      id="contact-subject"
                       type="text"
                       required
                       value={formData.subject}
@@ -232,10 +235,11 @@ export default function ContactPageClient({ contactInfo }: ContactPageClientProp
                     />
                   </div>
                   <div>
-                    <label className="text-brand-muted uppercase text-[9px] tracking-widest block mb-2">
+                    <label htmlFor="contact-message" className="text-brand-muted uppercase text-[9px] tracking-widest block mb-2">
                       {t("contact.messageLabel")}
                     </label>
                     <textarea
+                      id="contact-message"
                       required
                       rows={5}
                       value={formData.message}

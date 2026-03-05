@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeClient } from "@/lib/sanity";
+import { writeClient, client } from "@/lib/sanity";
 import { randomUUID } from "crypto";
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY ?? "";
@@ -12,6 +12,7 @@ export interface CheckoutItem {
   price: number;
   quantity: number;
   size?: string;
+  unit?: string;
   image: string | null;
   slug: string;
 }
@@ -45,19 +46,51 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "email and items are required" }, { status: 400 });
     }
 
+    // ── Validate prices (especially range-priced products) ──
+    const productIds = [...new Set(items.map((i) => i._id))];
+    const products: { _id: string; price: number; priceType?: string; priceMax?: number }[] =
+      await client.fetch(
+        `*[_type == "product" && _id in $ids]{ _id, price, priceType, priceMax }`,
+        { ids: productIds }
+      );
+    const productMap = new Map(products.map((p) => [p._id, p]));
+
+    for (const item of items) {
+      const product = productMap.get(item._id);
+      if (!product) {
+        return NextResponse.json({ error: `Product "${item.name}" not found` }, { status: 400 });
+      }
+      if (product.priceType === "range" && product.priceMax) {
+        if (item.price < product.price || item.price > product.priceMax) {
+          return NextResponse.json(
+            { error: `Price for "${item.name}" must be between ${product.price} and ${product.priceMax}` },
+            { status: 400 }
+          );
+        }
+      } else {
+        // For single-price products, verify the price matches
+        if (item.price !== product.price) {
+          return NextResponse.json(
+            { error: `Price mismatch for "${item.name}"` },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
     const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const shippingPrice = shippingMethod?.price ?? 0;
     const grandTotal = subtotal + shippingPrice;
 
     const orderItems = items.map((i) => ({
-      _key: `${i._id}-${i.size ?? ""}`,
+      _key: `${i._id}-${i.size ?? ""}-${i.unit ?? ""}`,
       productId: i._id, name: i.name, price: i.price,
-      quantity: i.quantity, size: i.size ?? null, image: i.image ?? null,
+      quantity: i.quantity, size: i.size ?? null, unit: i.unit ?? null, image: i.image ?? null,
     }));
 
     /* ── Bank Transfer ── */
     if (paymentMethod === "bank_transfer") {
-      const reference = `BT-${Date.now()}-${randomUUID().slice(0, 8)}`;
+      const reference = `BT-${randomUUID()}`;
 
       await writeClient.create({
         _type: "order",
@@ -101,7 +134,7 @@ export async function POST(req: NextRequest) {
           customer_name: name,
           items: items.map((i) => ({
             productId: i._id, name: i.name, price: i.price,
-            quantity: i.quantity, size: i.size ?? null, image: i.image ?? null,
+            quantity: i.quantity, size: i.size ?? null, unit: i.unit ?? null, image: i.image ?? null,
           })),
           shipping_address: shippingAddress ?? null,
           shipping_method: shippingMethod ?? null,

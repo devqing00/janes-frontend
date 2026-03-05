@@ -5,27 +5,22 @@ import { adminAuth } from "@/lib/firebase-admin";
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/orders?email=...  — public lookup by email
  * GET /api/orders (with Bearer token)  — authenticated user's orders
+ * Email-only lookup is no longer supported (security: prevents order enumeration)
  */
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const emailParam = searchParams.get("email");
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
 
-  let email: string | null = emailParam;
-
-  // If no email param, try to get from Firebase token
-  if (!email) {
-    const authHeader = request.headers.get("Authorization");
-    if (authHeader?.startsWith("Bearer ")) {
-      try {
-        const idToken = authHeader.split("Bearer ")[1];
-        const decoded = await adminAuth.verifyIdToken(idToken);
-        email = decoded.email || null;
-      } catch {
-        return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-      }
-    }
+  let email: string | null = null;
+  try {
+    const idToken = authHeader.split("Bearer ")[1];
+    const decoded = await adminAuth.verifyIdToken(idToken);
+    email = decoded.email || null;
+  } catch {
+    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
 
   if (!email) {

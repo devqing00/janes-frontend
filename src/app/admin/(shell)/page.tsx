@@ -233,7 +233,7 @@ export default function AdminDashboardPage() {
                       {product.category}
                     </td>
                     <td className="px-5 py-3.5 text-sm text-[#1A1A1A]">
-                      ${product.price}
+                      ₦{(product.price ?? 0).toLocaleString()}
                     </td>
                     <td className="px-5 py-3.5">
                       <span
@@ -264,7 +264,7 @@ export default function AdminDashboardPage() {
                       {product.name}
                     </p>
                     <p className="text-xs text-[#666] mt-0.5">
-                      {product.category} &middot; ${product.price}
+                      {product.category} &middot; ₦{(product.price ?? 0).toLocaleString()}
                     </p>
                   </div>
                   <span

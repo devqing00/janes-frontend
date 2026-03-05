@@ -94,10 +94,11 @@ export default function Footer() {
                     className="flex flex-col md:flex-row items-start md:items-end gap-4"
                   >
                     <div className="flex-1 min-w-0">
-                      <label className="text-white/30 uppercase text-[9px] tracking-widest block mb-2">
+                      <label htmlFor="newsletter-email" className="text-white/30 uppercase text-[9px] tracking-widest block mb-2">
                         {t("footer.emailLabel")}
                       </label>
                       <input
+                        id="newsletter-email"
                         type="email"
                         value={nlEmail}
                         onChange={(e) => setNlEmail(e.target.value)}
@@ -218,7 +219,7 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="mx-auto max-w-[1440px] px-6 md:px-12 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-white/25 text-[10px] uppercase tracking-widest">
-            &copy; {new Date().getFullYear()} JANES. {t("footer.copyright", { year: new Date().getFullYear().toString() })}
+            {t("footer.copyright", { year: new Date().getFullYear().toString() })}
           </p>
           <div className="flex gap-6">
             <Link

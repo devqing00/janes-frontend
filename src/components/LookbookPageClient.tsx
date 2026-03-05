@@ -21,16 +21,16 @@ const GRID_PATTERNS = [
 
 /* Placeholder lookbook images — used when Sanity has no data */
 const FALLBACK_IMAGES = [
-  { src: "https://images.unsplash.com/photo-1590735213920-68192a487bc2?w=800&q=80", alt: "Look 1 — Ankara drape set" },
-  { src: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&q=80", alt: "Look 2 — Aso-Oke ensemble" },
-  { src: "https://images.unsplash.com/photo-1617137968427-85924c800a22?w=800&q=80", alt: "Look 3 — Agbada flow" },
-  { src: "https://images.unsplash.com/photo-1606722590583-6951b5ea92ad?w=800&q=80", alt: "Look 4 — Adire fabric" },
-  { src: "https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=800&q=80", alt: "Look 5 — Lagos street style" },
-  { src: "https://images.unsplash.com/photo-1523824921871-d6f1a15151f1?w=800&q=80", alt: "Look 6 — Bold wax print" },
-  { src: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80", alt: "Look 7 — Gele editorial" },
-  { src: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=800&q=80", alt: "Look 8 — Movement" },
-  { src: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&q=80", alt: "Look 9 — Kaftan styling" },
-  { src: "https://images.unsplash.com/photo-1506795660198-e95c77602c14?w=800&q=80", alt: "Look 10 — Textile details" },
+  { src: "https://images.pexels.com/photos/1625775/pexels-photo-1625775.jpeg?auto=compress&cs=tinysrgb&w=800&q=80", alt: "Look 1 — Ankara drape set" },
+  { src: "https://images.pexels.com/photos/7521131/pexels-photo-7521131.jpeg?auto=compress&cs=tinysrgb&w=800&q=80", alt: "Look 2 — Aso-Oke ensemble" },
+  { src: "https://images.pexels.com/photos/35069196/pexels-photo-35069196.jpeg?auto=compress&cs=tinysrgb&w=800&q=80", alt: "Look 3 — Agbada flow" },
+  { src: "https://images.pexels.com/photos/34249459/pexels-photo-34249459.jpeg?auto=compress&cs=tinysrgb&w=800&q=80", alt: "Look 4 — Adire fabric" },
+  { src: "https://images.pexels.com/photos/28988328/pexels-photo-28988328.jpeg?auto=compress&cs=tinysrgb&w=800&q=80", alt: "Look 5 — Lagos street style" },
+  { src: "https://images.pexels.com/photos/29168547/pexels-photo-29168547.jpeg?auto=compress&cs=tinysrgb&w=800&q=80", alt: "Look 6 — Bold wax print" },
+  { src: "https://images.pexels.com/photos/29168553/pexels-photo-29168553.jpeg?auto=compress&cs=tinysrgb&w=800&q=80", alt: "Look 7 — Gele editorial" },
+  { src: "https://images.pexels.com/photos/28988329/pexels-photo-28988329.jpeg?auto=compress&cs=tinysrgb&w=800&q=80", alt: "Look 8 — Movement" },
+  { src: "https://images.pexels.com/photos/34249446/pexels-photo-34249446.jpeg?auto=compress&cs=tinysrgb&w=800&q=80", alt: "Look 9 — Kaftan styling" },
+  { src: "https://images.pexels.com/photos/29324632/pexels-photo-29324632.jpeg?auto=compress&cs=tinysrgb&w=800&q=80", alt: "Look 10 — Textile details" },
 ];
 
 export interface LookbookImageData {

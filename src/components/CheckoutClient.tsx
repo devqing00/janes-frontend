@@ -245,10 +245,10 @@ export default function CheckoutClient() {
 
   const validateDelivery = (d: DeliveryForm) => {
     const e: Partial<DeliveryForm> = {};
-    if (!d.name.trim()) e.name = "Required";
-    if (!d.line1.trim()) e.line1 = "Required";
-    if (!d.city.trim()) e.city = "Required";
-    if (!d.country.trim()) e.country = "Required";
+    if (!d.name.trim()) e.name = t("common.required");
+    if (!d.line1.trim()) e.line1 = t("common.required");
+    if (!d.city.trim()) e.city = t("common.required");
+    if (!d.country.trim()) e.country = t("common.required");
     return e;
   };
 
@@ -386,7 +386,7 @@ export default function CheckoutClient() {
             <button
               type="button"
               onClick={dismissAutofill}
-              aria-label="Dismiss"
+              aria-label={t("checkout.dismissAutofill")}
               className="text-[#bbb] hover:text-[#1A1A1A] transition-colors flex-shrink-0 mt-0.5"
             >
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
@@ -542,10 +542,10 @@ export default function CheckoutClient() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                   </svg>
-                  Loading rates&hellip;
+                  {t("checkout.loadingRates")}
                 </div>
               ) : shippingRates.length === 0 ? (
-                <div className="p-6 text-center text-sm text-[#999]">No rates configured. Contact us.</div>
+                <div className="p-6 text-center text-sm text-[#999]">{t("checkout.noRates")}</div>
               ) : (
                 shippingRates.map((rate, i) => (
                   <button key={rate._key ?? i} type="button"
@@ -588,7 +588,7 @@ export default function CheckoutClient() {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
               </svg>
-              Loading&hellip;
+              {t("common.loading")}
             </div>
           ) : activeMethods.length <= 1 ? (
             /* Single method — auto-selected, just show info  */
@@ -696,7 +696,7 @@ export default function CheckoutClient() {
         <h2 className="text-[10px] uppercase tracking-[0.2em] text-[#666] mb-5">{t("checkout.summaryHeading")}</h2>
         <div className="space-y-4 mb-5">
           {items.map((item) => (
-            <div key={item._id + (item.size ?? "")} className="flex gap-3.5">
+            <div key={item._id + (item.size ?? "") + (item.unit ?? "")} className="flex gap-3.5">
               <div className="relative w-14 h-[72px] bg-[#F5F0EB] flex-shrink-0 overflow-hidden">
                 {item.image ? (
                   <Image src={item.image} alt={item.name} fill className="object-cover" />
@@ -709,7 +709,7 @@ export default function CheckoutClient() {
                 )}
                 {item.quantity > 1 && (
                   <span className="absolute top-0 right-0 bg-[#1A1A1A] text-white text-[9px] leading-none px-1 py-0.5">
-                    ×{item.quantity}
+                    {item.unit ? `${item.quantity} ${item.unit}` : `×${item.quantity}`}
                   </span>
                 )}
               </div>
@@ -717,6 +717,9 @@ export default function CheckoutClient() {
                 <div className="min-w-0">
                   <p className="text-[13px] text-[#1A1A1A] leading-tight truncate">{item.name}</p>
                   {item.size && <p className="text-[11px] text-[#999] mt-0.5">{t("checkout.size")} {item.size}</p>}
+                  {item.unit && !item.size && (
+                    <p className="text-[11px] text-[#999] mt-0.5">{item.quantity} {item.unit}{item.quantity !== 1 ? "s" : ""}</p>
+                  )}
                 </div>
                 <p className="text-[13px] text-[#1A1A1A] flex-shrink-0">{fmtPrice(item.price * item.quantity)}</p>
               </div>

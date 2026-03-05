@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import PageHero from "@/components/PageHero";
 import { useLocale } from "@/components/LocaleProvider";
 
@@ -17,11 +16,8 @@ export default function PrivacyPage() {
 
       <section className="bg-[#FAF8F5] py-24 md:py-36">
         <div className="mx-auto max-w-[900px] px-6 md:px-12">
-          <motion.div
-            className="prose-custom"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
+          <div
+            className="prose-custom animate-fadeIn"
           >
             <p className="text-[#666] text-xs uppercase tracking-widest mb-12">
               {t("privacy.lastUpdated")}
@@ -84,7 +80,7 @@ export default function PrivacyPage() {
                 </p>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
     </>

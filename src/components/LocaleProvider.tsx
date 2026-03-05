@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useState,
+  useEffect,
   useCallback,
   type ReactNode,
 } from "react";
@@ -53,13 +54,18 @@ const LocaleContext = createContext<LocaleContextValue>({
 /* ── Provider ─────────────────────────────────────────── */
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<LocaleCode>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved && messages[saved]) return saved as LocaleCode;
+  const [locale, setLocaleState] = useState<LocaleCode>("en");
+  const [mounted, setMounted] = useState(false);
+
+  // Hydration-safe: read localStorage only after mount
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved && messages[saved]) {
+      setLocaleState(saved as LocaleCode);
+      document.documentElement.lang = saved;
     }
-    return "en";
-  });
+    setMounted(true);
+  }, []);
 
   const setLocale = useCallback((code: LocaleCode) => {
     if (messages[code]) {

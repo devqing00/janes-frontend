@@ -7,6 +7,7 @@ import {
   useEffect,
   useRef,
   useCallback,
+  useMemo,
   type ReactNode,
 } from "react";
 import { onAuthStateChanged, getIdToken, type User } from "firebase/auth";
@@ -116,6 +117,10 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         });
       } catch { /* silent — localStorage is the fallback */ }
     }, SERVER_SYNC_DEBOUNCE_MS);
+
+    return () => {
+      if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+    };
   }, [items, mounted]);
 
   const toggleItem = useCallback((product: WishlistItem) => {
@@ -138,8 +143,13 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
 
   const itemCount = items.length;
 
+  const value = useMemo<WishlistContextType>(
+    () => ({ items, toggleItem, removeItem, isInWishlist, itemCount }),
+    [items, toggleItem, removeItem, isInWishlist, itemCount]
+  );
+
   return (
-    <WishlistContext.Provider value={{ items, toggleItem, removeItem, isInWishlist, itemCount }}>
+    <WishlistContext.Provider value={value}>
       {children}
     </WishlistContext.Provider>
   );

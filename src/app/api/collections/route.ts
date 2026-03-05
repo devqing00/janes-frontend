@@ -8,7 +8,6 @@ export async function GET() {
         _id, title, "slug": slug.current, description, season, year, status,
         "image": image.asset->url,
         "images": [image.asset->url],
-        "productCount": count(*[_type == "product" && references(^._id)])
       }`
     );
     return NextResponse.json(collections);

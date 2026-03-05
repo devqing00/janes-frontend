@@ -18,6 +18,8 @@ interface ProductData {
   name: string;
   slug: string;
   price: number;
+  priceType?: "single" | "range";
+  priceMax?: number;
   comparePrice?: number;
   inStock?: boolean;
   description: string;
@@ -33,6 +35,8 @@ interface RelatedProduct {
   name: string;
   slug: string;
   price: number;
+  priceType?: "single" | "range";
+  priceMax?: number;
   comparePrice?: number;
   inStock?: boolean;
   image: string | null;
@@ -51,16 +55,21 @@ export default function ProductDetailClient({
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState(0);
   const [addedToBag, setAddedToBag] = useState(false);
+  const [customPrice, setCustomPrice] = useState<string>("");
 
   const isOutOfStock = product.inStock === false;
+  const isRange = product.priceType === "range" && !!product.priceMax;
+  const effectivePrice = isRange ? (Number(customPrice) || product.price) : product.price;
+  const rangeValid = !isRange || (Number(customPrice) >= product.price && Number(customPrice) <= (product.priceMax ?? product.price));
 
   const handleAddToBag = () => {
     if (!product || isOutOfStock) return;
+    if (isRange && !rangeValid) return;
     addItem({
       _id: product._id,
       name: product.name,
       slug: product.slug,
-      price: product.price,
+      price: effectivePrice,
       image: product.images?.[0]?.url || null,
       size: selectedSize || undefined,
     });
@@ -144,13 +153,21 @@ export default function ProductDetailClient({
 
               {/* Price with compare-at price support */}
               <div className="flex items-center gap-3 mt-4">
-                <p className={`text-xl ${onSale ? "text-[#C08A6F]" : "text-[#1A1A1A]"}`}>
-                  {formatPrice(product.price)}
-                </p>
-                {onSale && (
-                  <p className="text-[#999] text-base line-through">
-                    {formatPrice(product.comparePrice!)}
+                {isRange ? (
+                  <p className="text-xl text-[#1A1A1A]">
+                    {formatPrice(product.price)} &ndash; {formatPrice(product.priceMax!)}
                   </p>
+                ) : (
+                  <>
+                    <p className={`text-xl ${onSale ? "text-[#C08A6F]" : "text-[#1A1A1A]"}`}>
+                      {formatPrice(product.price)}
+                    </p>
+                    {onSale && (
+                      <p className="text-[#999] text-base line-through">
+                        {formatPrice(product.comparePrice!)}
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -161,6 +178,33 @@ export default function ProductDetailClient({
               {product.description && (
                 <div className="mt-8 pt-8 border-t border-[#E8E2DB]">
                   <p className="text-[#666] text-sm leading-relaxed">{product.description}</p>
+                </div>
+              )}
+
+              {/* Custom price input for range products */}
+              {isRange && (
+                <div className="mt-8">
+                  <p className="text-[#1A1A1A] uppercase text-[10px] tracking-[0.15em] font-medium mb-3">Your Price</p>
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex-1">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#999] text-sm">₦</span>
+                      <input
+                        type="number"
+                        value={customPrice}
+                        onChange={(e) => setCustomPrice(e.target.value)}
+                        min={product.price}
+                        max={product.priceMax}
+                        step="1"
+                        placeholder={`${product.price} – ${product.priceMax}`}
+                        className="w-full border border-[#E8E2DB] pl-7 pr-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#C08A6F] bg-white transition-colors"
+                      />
+                    </div>
+                  </div>
+                  {customPrice && !rangeValid && (
+                    <p className="text-red-500 text-[11px] mt-1.5">
+                      Please enter a price between {formatPrice(product.price)} and {formatPrice(product.priceMax!)}
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -193,9 +237,9 @@ export default function ProductDetailClient({
               <div className="flex items-center gap-3 mt-8">
                 <button
                   onClick={handleAddToBag}
-                  disabled={isOutOfStock}
+                  disabled={isOutOfStock || (isRange && !rangeValid)}
                   className={`flex-1 uppercase text-[11px] tracking-[0.2em] py-4 transition-colors duration-300 ${
-                    isOutOfStock
+                    isOutOfStock || (isRange && !rangeValid)
                       ? "bg-[#E8E2DB] text-[#999] cursor-not-allowed"
                       : "bg-[#C08A6F] text-white hover:bg-[#a8755c]"
                   }`}
@@ -276,8 +320,14 @@ export default function ProductDetailClient({
                     <div className="mt-4">
                       <h3 className="text-[#1A1A1A] text-sm font-medium">{item.name}</h3>
                       <div className="flex items-center gap-2 mt-1">
-                        <p className={`text-sm ${itemOnSale ? "text-[#C08A6F] font-medium" : "text-[#666]"}`}>{formatPrice(item.price)}</p>
-                        {itemOnSale && <p className="text-[#999] text-sm line-through">{formatPrice(item.comparePrice!)}</p>}
+                        {item.priceType === "range" && item.priceMax ? (
+                          <p className="text-sm text-[#666]">{formatPrice(item.price)} &ndash; {formatPrice(item.priceMax)}</p>
+                        ) : (
+                          <>
+                            <p className={`text-sm ${itemOnSale ? "text-[#C08A6F] font-medium" : "text-[#666]"}`}>{formatPrice(item.price)}</p>
+                            {itemOnSale && <p className="text-[#999] text-sm line-through">{formatPrice(item.comparePrice!)}</p>}
+                          </>
+                        )}
                       </div>
                     </div>
                   </Link>

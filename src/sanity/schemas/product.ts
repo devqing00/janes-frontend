@@ -7,7 +7,7 @@ const product = {
       name: "name",
       title: "Name",
       type: "string",
-      validation: (Rule: { required: () => unknown }) => Rule.required(),
+      description: "Leave blank for fabric variants — they are named automatically from their tag.",
     },
     {
       name: "slug",
@@ -41,9 +41,27 @@ const product = {
       description: "Level 3 category tags for this product",
     },
     {
+      name: "priceType",
+      title: "Price Type",
+      type: "string",
+      options: {
+        list: [
+          { title: "Single (fixed price)", value: "single" },
+          { title: "Range (min – max)", value: "range" },
+        ],
+      },
+      initialValue: "single",
+    },
+    {
       name: "price",
       title: "Price",
       type: "number",
+    },
+    {
+      name: "priceMax",
+      title: "Maximum Price",
+      type: "number",
+      description: "Upper end of range pricing. Only used when priceType is range.",
     },
     {
       name: "comparePrice",
@@ -98,6 +116,13 @@ const product = {
       name: "featured",
       title: "Featured",
       type: "boolean",
+      initialValue: false,
+    },
+    {
+      name: "isFabricVariant",
+      title: "Fabric Variant",
+      type: "boolean",
+      description: "Enable for images in the Fabrics category. Pricing, unit, and description come from the tag.",
       initialValue: false,
     },
   ],

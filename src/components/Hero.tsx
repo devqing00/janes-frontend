@@ -20,9 +20,9 @@ const reveal = {
 
 /* ── Fallback images ── */
 const FALLBACK_IMAGES = [
-  "https://images.unsplash.com/photo-1590735213920-68192a487bc2?w=600&q=80",
-  "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600&q=80",
-  "https://images.unsplash.com/photo-1617137968427-85924c800a22?w=600&q=80",
+  "https://images.pexels.com/photos/1625775/pexels-photo-1625775.jpeg?auto=compress&cs=tinysrgb&w=600&q=80",
+  "https://images.pexels.com/photos/7521131/pexels-photo-7521131.jpeg?auto=compress&cs=tinysrgb&w=600&q=80",
+  "https://images.pexels.com/photos/35069196/pexels-photo-35069196.jpeg?auto=compress&cs=tinysrgb&w=600&q=80",
 ];
 
 export interface HeroProps {
@@ -132,7 +132,7 @@ export default function Hero({
             <div className="aspect-[3/4] relative overflow-hidden">
               <Image
                 src={images[0]}
-                alt={t("hero.imageAlt")}
+                alt={t("hero.imageAlt1")}
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 40vw, 25vw"
@@ -198,7 +198,7 @@ export default function Hero({
             >
               <Image
                 src={images[1]}
-                alt={t("hero.imageAlt")}
+                alt={t("hero.imageAlt2")}
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 55vw, 33vw"
@@ -218,7 +218,7 @@ export default function Hero({
             >
               <Image
                 src={images[2]}
-                alt={t("hero.imageAlt")}
+                alt={t("hero.imageAlt3")}
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 40vw, 25vw"

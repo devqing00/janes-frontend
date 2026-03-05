@@ -36,11 +36,14 @@ export default function EditProductPage() {
     categoryId: "",
     subcategoryId: "",
     tagIds: [] as string[],
+    priceType: "single" as "single" | "range",
     price: "",
+    priceMax: "",
     description: "",
     details: "",
     sizes: "",
     status: "draft",
+    isFabricVariant: false,
   });
 
   const mainCategories = useMemo(() => allCategories.filter((c) => c.level === 1), [allCategories]);
@@ -52,6 +55,13 @@ export default function EditProductPage() {
     () => allCategories.filter((c) => c.level === 3 && c.parent?._id === form.subcategoryId),
     [allCategories, form.subcategoryId]
   );
+
+  // Detect if the selected main category is "fabrics"
+  const isFabricCategory = useMemo(() => {
+    if (!form.categoryId) return false;
+    const mainCat = allCategories.find((c) => c._id === form.categoryId);
+    return mainCat?.slug === "fabrics";
+  }, [allCategories, form.categoryId]);
 
   const toggleTag = (tagId: string) => {
     setForm((prev) => ({
@@ -72,11 +82,14 @@ export default function EditProductPage() {
             categoryId: data.categoryId || "",
             subcategoryId: data.subcategoryId || "",
             tagIds: Array.isArray(data.tagIds) ? data.tagIds : [],
+            priceType: data.priceType || "single",
             price: String(data.price || ""),
+            priceMax: String(data.priceMax || ""),
             description: data.description || "",
             details: data.details || "",
             sizes: data.sizes || "",
             status: data.status || "draft",
+            isFabricVariant: data.isFabricVariant === true,
           });
           // Map existing images — API returns images[]{asset->{ _id, url }}
           if (Array.isArray(data.images)) {
@@ -112,7 +125,7 @@ export default function EditProductPage() {
     const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: name === "order" || name === "level" ? Number(value) : value,
       ...(name === "categoryId" ? { subcategoryId: "", tagIds: [] } : {}),
       ...(name === "subcategoryId" ? { tagIds: [] } : {}),
     }));
@@ -122,13 +135,35 @@ export default function EditProductPage() {
     e.preventDefault();
     setSaving(true);
     try {
+      const body: Record<string, unknown> = {
+        categoryId: form.categoryId,
+        subcategoryId: form.subcategoryId,
+        tagIds: form.tagIds,
+        images: images.map((img) => img.assetRef),
+        status: form.status,
+        isFabricVariant: isFabricCategory,
+      };
+
+      if (!isFabricCategory) {
+        body.name = form.name;
+        body.slug = form.slug;
+        body.priceType = form.priceType;
+        body.price = form.price;
+        body.priceMax = form.priceMax;
+        body.description = form.description;
+        body.details = form.details;
+        body.sizes = form.sizes;
+      } else {
+        // Keep existing name/slug for fabric variants
+        body.name = form.name;
+        body.slug = form.slug;
+        body.price = 0;
+      }
+
       const res = await fetch(`/api/admin/products/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          images: images.map((img) => img.assetRef),
-        }),
+        body: JSON.stringify(body),
       });
       if (res.ok) {
         toast("Product updated successfully");
@@ -247,18 +282,34 @@ export default function EditProductPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
-          {/* Basic info */}
+          {/* Category selection — always visible */}
           <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 space-y-5">
-            <h2 className="font-medium text-[#1A1A1A] text-sm uppercase tracking-widest">Basic Information</h2>
+            <h2 className="font-medium text-[#1A1A1A] text-sm uppercase tracking-widest">
+              {isFabricCategory ? "Fabric Variant" : "Basic Information"}
+            </h2>
+
+            {isFabricCategory && (
+              <div className="bg-[#FDF8F4] border border-[#E8DED5] rounded-lg p-4 text-xs text-[#666] leading-relaxed">
+                <strong className="text-[#C08A6F]">Fabric mode:</strong> Pricing, unit, and descriptions are set on the tag in&nbsp;
+                <span className="font-medium text-[#1A1A1A]">Categories</span>. Just update the tag or swap the image(s).
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-              <div className="sm:col-span-2">
-                <label className="text-[#666] text-xs block mb-1.5">Product Name</label>
-                <input name="name" required value={form.name} onChange={handleChange} className={inputClass} />
-              </div>
-              <div className="sm:col-span-2">
-                <label className="text-[#666] text-xs block mb-1.5">URL Slug</label>
-                <input name="slug" required value={form.slug} onChange={handleChange} className={inputClass + " font-mono text-xs"} />
-              </div>
+              {/* Name & slug — only for regular products */}
+              {!isFabricCategory && (
+                <>
+                  <div className="sm:col-span-2">
+                    <label className="text-[#666] text-xs block mb-1.5">Product Name</label>
+                    <input name="name" required value={form.name} onChange={handleChange} className={inputClass} />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="text-[#666] text-xs block mb-1.5">URL Slug</label>
+                    <input name="slug" required value={form.slug} onChange={handleChange} className={inputClass + " font-mono text-xs"} />
+                  </div>
+                </>
+              )}
+
               <div>
                 <label className="text-[#666] text-xs block mb-1.5">Category</label>
                 <select name="categoryId" value={form.categoryId} onChange={handleChange} className={inputClass} required>
@@ -279,7 +330,7 @@ export default function EditProductPage() {
               </div>
               {tags.length > 0 && (
                 <div className="sm:col-span-2">
-                  <label className="text-[#666] text-xs block mb-1.5">Tags</label>
+                  <label className="text-[#666] text-xs block mb-1.5">{isFabricCategory ? "Tag (required)" : "Tags"}</label>
                   <div className="flex flex-wrap gap-2">
                     {tags.map((tag) => (
                       <button key={tag._id} type="button" onClick={() => toggleTag(tag._id)}
@@ -290,26 +341,69 @@ export default function EditProductPage() {
                   </div>
                 </div>
               )}
-              <div>
-                <label className="text-[#666] text-xs block mb-1.5">Price (NGN)</label>
-                <input name="price" type="number" required value={form.price} onChange={handleChange} className={inputClass} />
-              </div>
-              <div>
-                <label className="text-[#666] text-xs block mb-1.5">Sizes (comma separated)</label>
-                <input name="sizes" value={form.sizes} onChange={handleChange} className={inputClass} />
-              </div>
+
+              {/* Pricing & sizes — only for regular products */}
+              {!isFabricCategory && (
+                <>
+                  <div className="sm:col-span-2">
+                    <label className="text-[#666] text-xs block mb-1.5">Price Type</label>
+                    <div className="flex gap-3">
+                      {(["single", "range"] as const).map((pt) => (
+                        <button
+                          key={pt}
+                          type="button"
+                          onClick={() => setForm((prev) => ({ ...prev, priceType: pt, ...(pt === "single" ? { priceMax: "" } : {}) }))}
+                          className={`flex-1 text-xs py-2.5 rounded-lg border transition-colors ${
+                            form.priceType === pt
+                              ? "bg-[#C08A6F] text-white border-[#C08A6F]"
+                              : "bg-white text-[#666] border-gray-200 hover:border-[#C08A6F]"
+                          }`}
+                        >
+                          {pt === "single" ? "Single (fixed)" : "Range (min – max)"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[#666] text-xs block mb-1.5">
+                      {form.priceType === "range" ? "Min Price (NGN)" : "Price (NGN)"}
+                    </label>
+                    <input name="price" type="number" required value={form.price} onChange={handleChange} className={inputClass} />
+                  </div>
+                  {form.priceType === "range" && (
+                    <div>
+                      <label className="text-[#666] text-xs block mb-1.5">Max Price (NGN)</label>
+                      <input name="priceMax" type="number" required value={form.priceMax} onChange={handleChange} className={inputClass} />
+                    </div>
+                  )}
+                  {form.priceType !== "range" && (
+                    <div>
+                      <label className="text-[#666] text-xs block mb-1.5">Sizes (comma separated)</label>
+                      <input name="sizes" value={form.sizes} onChange={handleChange} className={inputClass} />
+                    </div>
+                  )}
+                  {form.priceType === "range" && (
+                    <div className="sm:col-span-2">
+                      <label className="text-[#666] text-xs block mb-1.5">Sizes (comma separated)</label>
+                      <input name="sizes" value={form.sizes} onChange={handleChange} className={inputClass} />
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
 
-          {/* Description */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 space-y-5">
-            <h2 className="font-medium text-[#1A1A1A] text-sm uppercase tracking-widest">Description</h2>
-            <textarea name="description" rows={4} value={form.description} onChange={handleChange} className={inputClass + " resize-none"} placeholder="Describe the product..." />
-            <div>
-              <label className="text-[#666] text-xs block mb-1.5">Details (one per line)</label>
-              <textarea name="details" rows={4} value={form.details} onChange={handleChange} className={inputClass + " resize-none"} />
+          {/* Description — only for regular products */}
+          {!isFabricCategory && (
+            <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 space-y-5">
+              <h2 className="font-medium text-[#1A1A1A] text-sm uppercase tracking-widest">Description</h2>
+              <textarea name="description" rows={4} value={form.description} onChange={handleChange} className={inputClass + " resize-none"} placeholder="Describe the product..." />
+              <div>
+                <label className="text-[#666] text-xs block mb-1.5">Details (one per line)</label>
+                <textarea name="details" rows={4} value={form.details} onChange={handleChange} className={inputClass + " resize-none"} />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Images */}
           <ImageUpload images={images} onImagesChange={setImages} />

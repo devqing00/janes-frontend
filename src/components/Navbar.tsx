@@ -133,6 +133,15 @@ export default function Navbar() {
     dropdownTimeout.current = setTimeout(() => setActiveDropdown(null), 200);
   };
 
+  const handleDropdownKeyDown = (e: React.KeyboardEvent, label: string) => {
+    if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveDropdown(activeDropdown === label ? null : label);
+    } else if (e.key === "Escape") {
+      setActiveDropdown(null);
+    }
+  };
+
   return (
     <>
       <nav
@@ -163,9 +172,14 @@ export default function Navbar() {
                   className="relative"
                   onMouseEnter={() => hasDropdown ? handleMouseEnter(link.label) : undefined}
                   onMouseLeave={hasDropdown ? handleMouseLeave : undefined}
+                  onFocus={() => hasDropdown ? handleMouseEnter(link.label) : undefined}
+                  onBlur={hasDropdown ? handleMouseLeave : undefined}
                 >
                   {link.href === "#" ? (
                     <button
+                      aria-expanded={activeDropdown === link.label}
+                      aria-haspopup="true"
+                      onKeyDown={(e) => handleDropdownKeyDown(e, link.label)}
                       className={`relative uppercase text-[10px] tracking-[0.25em] transition-colors duration-300 flex items-center gap-1 ${
                         isActive ? "text-white" : "text-white/60 hover:text-white"
                       }`}
@@ -178,6 +192,9 @@ export default function Navbar() {
                   ) : (
                     <Link
                       href={link.href}
+                      aria-expanded={hasDropdown ? activeDropdown === link.label : undefined}
+                      aria-haspopup={hasDropdown ? "true" : undefined}
+                      onKeyDown={hasDropdown ? (e) => handleDropdownKeyDown(e, link.label) : undefined}
                       className={`relative uppercase text-[10px] tracking-[0.25em] transition-colors duration-300 flex items-center gap-1 ${
                         isActive ? "text-white" : "text-white/60 hover:text-white"
                       }`}
@@ -210,11 +227,12 @@ export default function Navbar() {
                         onMouseEnter={() => handleMouseEnter(link.label)}
                         onMouseLeave={handleMouseLeave}
                       >
-                        <div className="bg-[#232323] border border-white/10 rounded-lg py-2 min-w-[180px] shadow-xl">
+                        <div className="bg-[#232323] border border-white/10 rounded-lg py-2 min-w-[180px] shadow-xl" role="menu">
                           {link.dropdown!.map((sub) => (
                             <Link
                               key={sub.href}
                               href={sub.href}
+                              role="menuitem"
                               className="block px-5 py-2.5 text-white/60 text-[10px] uppercase tracking-[0.15em] hover:text-white hover:bg-white/5 transition-colors"
                             >
                               {sub.label}
@@ -317,7 +335,7 @@ export default function Navbar() {
                 </>
               ) : (
                 <button
-                  aria-label="Sign in"
+                  aria-label={t("nav.signIn")}
                   onClick={signInWithGoogle}
                   className="text-white/60 hover:text-white transition-colors duration-300 flex items-center gap-1.5"
                 >
@@ -380,7 +398,7 @@ export default function Navbar() {
             {/* Wishlist */}
             <Link
               href="/wishlist"
-              aria-label="Wishlist"
+              aria-label={t("nav.wishlist")}
               className="hidden lg:flex text-white/60 hover:text-white transition-colors duration-300 relative"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-[18px] h-[18px]">
@@ -395,7 +413,7 @@ export default function Navbar() {
 
             {/* Cart */}
             <button
-              aria-label="Cart"
+              aria-label={t("nav.cart")}
               onClick={openCart}
               className="text-white/60 hover:text-white transition-colors duration-300 relative"
             >
@@ -411,7 +429,7 @@ export default function Navbar() {
 
             {/* Mobile menu toggle */}
             <button
-              aria-label="Menu"
+              aria-label={t("nav.menu")}
               className="lg:hidden text-white/60 hover:text-white transition-colors duration-300"
               onClick={() => setMobileOpen(!mobileOpen)}
             >
@@ -433,6 +451,9 @@ export default function Navbar() {
             transition={{ duration: 0.3, ease: "easeInOut" as const }}
             className="fixed inset-0 z-[200] lg:hidden flex flex-col"
             style={{ backgroundColor: "#232323" }}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("nav.menu")}
           >
             {/* Top bar */}
             <div className="flex items-center justify-between h-16 px-6">

@@ -17,8 +17,7 @@ export async function GET(req: NextRequest) {
       `*[_type == "order" && reference == $ref][0]{
         status,
         webhookVerifiedAt,
-        paidAt,
-        customerEmail
+        paidAt
       }`,
       { ref: reference }
     );
@@ -32,7 +31,6 @@ export async function GET(req: NextRequest) {
       status: order.status,
       webhookVerified: !!order.webhookVerifiedAt,
       paidAt: order.paidAt ?? null,
-      customerEmail: order.customerEmail ?? null,
     });
     res.headers.set("Cache-Control", "no-store");
     return res;

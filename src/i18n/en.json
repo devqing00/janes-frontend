@@ -71,7 +71,10 @@
     "exploreCollection": "Explore Collection",
     "season": "SS 2026",
     "scroll": "Scroll",
-    "imageAlt": "Fashion editorial"
+    "imageAlt": "Fashion editorial",
+    "imageAlt1": "Fashion editorial — look one",
+    "imageAlt2": "Fashion editorial — look two",
+    "imageAlt3": "Fashion editorial — look three"
   },
   "home": {
     "categoriesLabel": "Browse by Category",
@@ -136,9 +139,12 @@
     "subtotal": "Subtotal",
     "shippingNote": "Shipping & taxes calculated at checkout.",
     "checkout": "Checkout",
-    "clearBag": "Clear Bag"
+    "clearBag": "Clear Bag",
+    "decreaseQty": "Decrease quantity for",
+    "increaseQty": "Increase quantity for"
   },
   "search": {
+    "title": "Search",
     "closeSearch": "Close search",
     "placeholder": "Search our collections...",
     "noResults": "No results found for",
@@ -437,6 +443,46 @@
     "selectRate": "Select rate",
     "total": "Total",
     "yourNote": "Your note",
-    "metaTitle": "Checkout — JANES"
+    "metaTitle": "Checkout — JANES",
+    "loadingRates": "Loading rates…",
+    "noRates": "No rates configured. Contact us.",
+    "dismissAutofill": "Dismiss autofill"
+  },
+  "marquee": {
+    "newArrivals": "NEW ARRIVALS",
+    "craftedInLagos": "CRAFTED IN LAGOS",
+    "freeShipping": "FREE SHIPPING OVER ₦500,000",
+    "luxuriousContemporary": "LUXURIOUS & CONTEMPORARY",
+    "handwovenAsoOke": "HANDWOVEN ASO-OKE",
+    "designedForYou": "DESIGNED FOR YOU"
+  },
+  "stats": {
+    "designsCount": "150+",
+    "originalDesigns": "Original Designs",
+    "established": "EST.",
+    "establishedYear": "2020",
+    "location": "Lagos,",
+    "locationLabel": "Nigeria",
+    "originalPercent": "100%",
+    "originalLabel": "Original"
+  },
+  "fabric": {
+    "sectionLabel": "Fabrics",
+    "selectVariant": "Select a variant",
+    "variantsAvailable": "{n} variants available",
+    "quantity": "Quantity",
+    "maxQuantity": "Max: {n}",
+    "addToCart": "Add {qty} {unit}{plural} to Cart",
+    "added": "Added to Cart ✓",
+    "totalLabel": "Total",
+    "noVariants": "No variants available for this fabric group.",
+    "unit": {
+      "yard": "yard",
+      "meter": "meter",
+      "piece": "piece",
+      "roll": "roll",
+      "kg": "kg",
+      "length": "length"
+    }
   }
 }

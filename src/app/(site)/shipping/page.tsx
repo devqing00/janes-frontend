@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import PageHero from "@/components/PageHero";
 import { useLocale } from "@/components/LocaleProvider";
 
@@ -19,12 +18,7 @@ export default function ShippingPage() {
       <section className="bg-[#FAF8F5] py-24 md:py-36">
         <div className="mx-auto max-w-[900px] px-6 md:px-12">
           {/* Shipping */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-          >
+          <div className="animate-fadeIn">
             <h2 className="font-serif text-[#1A1A1A] text-3xl md:text-4xl mb-8">{t("shipping.shippingHeading")}</h2>
             <div className="space-y-6 text-[#666] text-sm leading-relaxed">
               <p>{t("shipping.shippingIntro")}</p>
@@ -62,16 +56,10 @@ export default function ShippingPage() {
 
               <p>{t("shipping.shippingNote")}</p>
             </div>
-          </motion.div>
+          </div>
 
           {/* Returns */}
-          <motion.div
-            className="mt-20"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-          >
+          <div className="mt-20 animate-fadeIn" style={{ animationDelay: "0.15s" }}>
             <h2 className="font-serif text-[#1A1A1A] text-3xl md:text-4xl mb-8">{t("shipping.returnsHeading")}</h2>
             <div className="space-y-6 text-[#666] text-sm leading-relaxed">
               <p>{t("shipping.returnsIntro")}</p>
@@ -91,22 +79,16 @@ export default function ShippingPage() {
               <p>{t("shipping.returnProcess")}</p>
               <p>{t("shipping.refundTimeline")}</p>
             </div>
-          </motion.div>
+          </div>
 
           {/* Exchanges */}
-          <motion.div
-            className="mt-20"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-          >
+          <div className="mt-20 animate-fadeIn" style={{ animationDelay: "0.3s" }}>
             <h2 className="font-serif text-[#1A1A1A] text-3xl md:text-4xl mb-8">{t("shipping.exchangesHeading")}</h2>
             <div className="space-y-6 text-[#666] text-sm leading-relaxed">
               <p>{t("shipping.exchangesIntro")}</p>
               <p>{t("shipping.exchangesTip")}</p>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
     </>

@@ -1,16 +1,20 @@
 import { NextResponse } from "next/server";
 import { writeClient } from "@/lib/sanity";
+import { getAdminSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 // GET all categories (tree structure)
 export async function GET() {
+  const session = await getAdminSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const categories = await writeClient.fetch(
       `*[_type == "category"] | order(level asc, order asc) {
         _id, title, "slug": slug.current, level, order, description,
         "image": image.asset->url,
-        "parent": parent->{_id, title, "slug": slug.current, level}
+        "parent": parent->{_id, title, "slug": slug.current, level},
+        fabricPrice, fabricPricePerN, fabricUnit, minQuantity, maxQuantity
       }`
     );
     return NextResponse.json(categories);
@@ -22,9 +26,14 @@ export async function GET() {
 
 // POST - create a new category
 export async function POST(request: Request) {
+  const session = await getAdminSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   try {
     const body = await request.json();
-    const { title, slug, level, parentId, description, order, image } = body;
+    const { title, slug, level, parentId, description, order, image,
+      fabricPrice, fabricPricePerN, fabricUnit, minQuantity, maxQuantity,
+    } = body;
 
     if (!title || !slug || !level) {
       return NextResponse.json({ error: "title, slug and level are required" }, { status: 400 });
@@ -50,6 +59,13 @@ export async function POST(request: Request) {
       };
     }
 
+    // Fabric pricing fields (level 3 tags under Fabrics)
+    if (fabricPrice !== undefined) doc.fabricPrice = Number(fabricPrice) || null;
+    if (fabricPricePerN !== undefined) doc.fabricPricePerN = Number(fabricPricePerN) || 1;
+    if (fabricUnit !== undefined) doc.fabricUnit = fabricUnit || null;
+    if (minQuantity !== undefined) doc.minQuantity = Number(minQuantity) || 1;
+    if (maxQuantity !== undefined) doc.maxQuantity = Number(maxQuantity) || null;
+
     const created = await writeClient.create(doc);
     return NextResponse.json(created, { status: 201 });
   } catch (err) {
@@ -60,9 +76,14 @@ export async function POST(request: Request) {
 
 // PATCH - update a category
 export async function PATCH(request: Request) {
+  const session = await getAdminSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   try {
     const body = await request.json();
-    const { _id, title, slug, level, parentId, description, order, image } = body;
+    const { _id, title, slug, level, parentId, description, order, image,
+      fabricPrice, fabricPricePerN, fabricUnit, minQuantity, maxQuantity,
+    } = body;
 
     if (!_id) {
       return NextResponse.json({ error: "_id is required" }, { status: 400 });
@@ -82,6 +103,12 @@ export async function PATCH(request: Request) {
         ? { _type: "image", asset: { _type: "reference", _ref: image } }
         : undefined;
     }
+    // Fabric pricing fields
+    if (fabricPrice !== undefined) patch.fabricPrice = Number(fabricPrice) || null;
+    if (fabricPricePerN !== undefined) patch.fabricPricePerN = Number(fabricPricePerN) || 1;
+    if (fabricUnit !== undefined) patch.fabricUnit = fabricUnit || null;
+    if (minQuantity !== undefined) patch.minQuantity = Number(minQuantity) || 1;
+    if (maxQuantity !== undefined) patch.maxQuantity = Number(maxQuantity) || null;
 
     const updated = await writeClient.patch(_id).set(patch).commit();
     return NextResponse.json(updated);
@@ -93,6 +120,9 @@ export async function PATCH(request: Request) {
 
 // DELETE - delete a category
 export async function DELETE(request: Request) {
+  const session = await getAdminSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");

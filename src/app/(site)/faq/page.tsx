@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import PageHero from "@/components/PageHero";
 import { useLocale } from "@/components/LocaleProvider";
 
@@ -25,13 +24,10 @@ export default function FAQPage() {
         <div className="mx-auto max-w-[900px] px-6 md:px-12">
           <div className="space-y-0">
             {faqs.map((faq, i) => (
-              <motion.details
+              <details
                 key={i}
-                className="group border-b border-[#1A1A1A]/10"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ delay: i * 0.05, duration: 0.5 }}
+                className="group border-b border-[#1A1A1A]/10 animate-fadeIn"
+                style={{ animationDelay: `${i * 0.05}s` }}
               >
                 <summary className="flex items-center justify-between py-6 md:py-8 cursor-pointer list-none">
                   <span className="text-[#1A1A1A] text-sm md:text-base font-medium pr-8">
@@ -46,18 +42,12 @@ export default function FAQPage() {
                     {faq.answer}
                   </p>
                 </div>
-              </motion.details>
+              </details>
             ))}
           </div>
 
           {/* Contact CTA */}
-          <motion.div
-            className="mt-20 text-center"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-          >
+          <div className="mt-20 text-center animate-fadeIn">
             <p className="text-[#666] text-sm mb-4">
               {t("faq.ctaPrompt")}
             </p>
@@ -70,7 +60,7 @@ export default function FAQPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
               </svg>
             </a>
-          </motion.div>
+          </div>
         </div>
       </section>
     </>

@@ -32,6 +32,9 @@ export async function DELETE(
   const { id } = await params;
 
   try {
+    // Verify the document is actually a contactMessage before deleting
+    const doc = await writeClient.fetch(`*[_type == "contactMessage" && _id == $id][0]{ _id }`, { id });
+    if (!doc) return NextResponse.json({ error: "Contact message not found" }, { status: 404 });
     await writeClient.delete(id);
     return NextResponse.json({ success: true });
   } catch {

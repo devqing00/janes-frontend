@@ -71,7 +71,10 @@
     "exploreCollection": "Explorer la collection",
     "season": "PE 2026",
     "scroll": "Défiler",
-    "imageAlt": "Éditorial mode"
+    "imageAlt": "Éditorial mode",
+    "imageAlt1": "Éditorial mode — look un",
+    "imageAlt2": "Éditorial mode — look deux",
+    "imageAlt3": "Éditorial mode — look trois"
   },
   "home": {
     "categoriesLabel": "Parcourir par catégorie",
@@ -136,9 +139,12 @@
     "subtotal": "Sous-total",
     "shippingNote": "Frais de livraison et taxes calculés à la commande.",
     "checkout": "Commander",
-    "clearBag": "Vider le panier"
+    "clearBag": "Vider le panier",
+    "decreaseQty": "Diminuer la quantité de",
+    "increaseQty": "Augmenter la quantité de"
   },
   "search": {
+    "title": "Recherche",
     "closeSearch": "Fermer la recherche",
     "placeholder": "Rechercher dans nos collections...",
     "noResults": "Aucun résultat trouvé pour",
@@ -437,6 +443,46 @@
     "selectRate": "Sélectionner le tarif",
     "total": "Total",
     "yourNote": "Votre note",
-    "metaTitle": "Commande — JANES"
+    "metaTitle": "Commande — JANES",
+    "loadingRates": "Chargement des tarifs…",
+    "noRates": "Aucun tarif configuré. Contactez-nous.",
+    "dismissAutofill": "Fermer la suggestion"
+  },
+  "marquee": {
+    "newArrivals": "NOUVEAUTÉS",
+    "craftedInLagos": "FABRIQUÉ À LAGOS",
+    "freeShipping": "LIVRAISON GRATUITE DÈS ₦500 000",
+    "luxuriousContemporary": "LUXE & CONTEMPORAIN",
+    "handwovenAsoOke": "ASO-OKE TISSÉ MAIN",
+    "designedForYou": "CRÉÉ POUR VOUS"
+  },
+  "stats": {
+    "designsCount": "150+",
+    "originalDesigns": "Créations originales",
+    "established": "FONDÉ",
+    "establishedYear": "2020",
+    "location": "Lagos,",
+    "locationLabel": "Nigeria",
+    "originalPercent": "100%",
+    "originalLabel": "Original"
+  },
+  "fabric": {
+    "sectionLabel": "Tissus",
+    "selectVariant": "Choisir une variante",
+    "variantsAvailable": "{n} variantes disponibles",
+    "quantity": "Quantité",
+    "maxQuantity": "Max : {n}",
+    "addToCart": "Ajouter {qty} {unit}{plural} au panier",
+    "added": "Ajouté au panier ✓",
+    "totalLabel": "Total",
+    "noVariants": "Aucune variante disponible pour ce groupe de tissus.",
+    "unit": {
+      "yard": "yard",
+      "meter": "mètre",
+      "piece": "pièce",
+      "roll": "rouleau",
+      "kg": "kg",
+      "length": "longueur"
+    }
   }
 }

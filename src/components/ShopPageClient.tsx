@@ -30,12 +30,27 @@ interface Product {
   slug: string;
   category: CategoryRef | null;
   subcategory?: CategoryRef | null;
-  tags?: CategoryRef[];
+  tags?: (CategoryRef & { fabricPrice?: number; fabricPricePerN?: number; fabricUnit?: string })[];
   price: number;
+  priceType?: "single" | "range";
+  priceMax?: number;
   comparePrice?: number;
   inStock?: boolean;
   image: string | null;
   featured?: boolean;
+  isFabricVariant?: boolean;
+}
+
+// Represents one deduplicated fabric group card for the shop grid
+interface FabricGroupCard {
+  _id: string; // tag._id used as key
+  tagSlug: string;
+  tagName: string;
+  image: string | null;
+  price: number;
+  fabricUnit: string;
+  count: number;
+  category: CategoryRef | null;
 }
 
 const containerVariants = {
@@ -117,7 +132,37 @@ export default function ShopPageClient() {
     return categoryTree.filter((c) => c.level === 2 && c.parent?._id === parentCat._id);
   }, [categoryTree, activeCategory]);
 
-  const filtered = products.filter((p) => {
+  // Separate fabric variants and deduplicate by tag into group cards
+  const fabricGroupCards = useMemo((): FabricGroupCard[] => {
+    const fabricVariants = products.filter((p) => p.isFabricVariant);
+    const grouped = new Map<string, FabricGroupCard>();
+    for (const v of fabricVariants) {
+      const tag = v.tags?.[0];
+      if (!tag) continue;
+      if (!grouped.has(tag.slug)) {
+        grouped.set(tag.slug, {
+          _id: tag._id,
+          tagSlug: tag.slug,
+          tagName: tag.title,
+          image: v.image,
+          price: tag.fabricPrice ?? v.price,
+          fabricUnit: tag.fabricUnit || "yard",
+          count: 1,
+          category: v.category,
+        });
+      } else {
+        grouped.get(tag.slug)!.count += 1;
+      }
+    }
+    return Array.from(grouped.values());
+  }, [products]);
+
+  const regularProducts = useMemo(
+    () => products.filter((p) => !p.isFabricVariant),
+    [products]
+  );
+
+  const filteredRegular = regularProducts.filter((p) => {
     const catSlug = p.category?.slug || "";
     const subSlug = p.subcategory?.slug || "";
     const catMatch = activeCategory === "All" || catSlug === activeCategory;
@@ -125,8 +170,19 @@ export default function ShopPageClient() {
     return catMatch && subMatch;
   });
 
-  const paginatedProducts = filtered.slice(0, visibleCount);
-  const hasMore = visibleCount < filtered.length;
+  const filteredFabricGroups = fabricGroupCards.filter((g) => {
+    const catSlug = g.category?.slug || "";
+    const catMatch = activeCategory === "All" || catSlug === activeCategory;
+    return catMatch;
+  });
+
+  // Items to render in the grid: regular products + fabric group cards
+  const gridItems = useMemo(() => {
+    return [...filteredRegular, ...filteredFabricGroups] as Array<Product | FabricGroupCard>;
+  }, [filteredRegular, filteredFabricGroups]);
+
+  const paginatedItems = gridItems.slice(0, visibleCount);
+  const hasMore = visibleCount < gridItems.length;
 
   return (
     <>
@@ -222,17 +278,62 @@ export default function ShopPageClient() {
               key={activeCategory + activeSub}
               variants={containerVariants}
             >
-              {paginatedProducts.map((item) => {
-                const onSale = item.comparePrice && item.comparePrice > item.price;
-                const outOfStock = item.inStock === false;
+              {paginatedItems.map((item) => {
+                // Fabric group card
+                if ("tagSlug" in item) {
+                  const g = item as FabricGroupCard;
+                  return (
+                    <motion.div key={g._id} variants={cardVariants}>
+                      <Link href={`/shop/fabric-group/${g.tagSlug}`} className="group block">
+                        <div className="relative overflow-hidden bg-brand-light aspect-[3/4]">
+                          {g.image ? (
+                            <Image
+                              src={g.image}
+                              alt={g.tagName}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-700"
+                              sizes="(max-width: 768px) 45vw, (max-width: 1024px) 30vw, 22vw"
+                            />
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center text-brand-muted text-xs">
+                              {t("common.noImage")}
+                            </div>
+                          )}
+                          <span className="absolute top-3 left-3 bg-[#C08A6F] text-white uppercase text-[8px] tracking-[0.15em] px-3 py-1.5">
+                            Fabrics
+                          </span>
+                          <div className="absolute bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-sm translate-y-full group-hover:translate-y-0 transition-transform duration-500">
+                            <span className="uppercase text-[10px] tracking-[0.15em] text-[#1A1A1A]">
+                              {g.count} variant{g.count !== 1 ? "s" : ""}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mt-4">
+                          <p className="text-brand-muted uppercase text-[9px] tracking-widest">
+                            {g.category?.title || "Fabrics"}
+                          </p>
+                          <p className="text-brand-text text-sm mt-1">{g.tagName}</p>
+                          <p className="text-sm font-medium text-brand-text mt-1">
+                            {formatPrice(g.price)} / {g.fabricUnit}
+                          </p>
+                        </div>
+                      </Link>
+                    </motion.div>
+                  );
+                }
+
+                // Regular product card
+                const p = item as Product;
+                const onSale = p.comparePrice && p.comparePrice > p.price;
+                const outOfStock = p.inStock === false;
                 return (
-                  <motion.div key={item._id} variants={cardVariants}>
-                    <Link href={`/shop/${item.slug}`} className="group block">
+                  <motion.div key={p._id} variants={cardVariants}>
+                    <Link href={`/shop/${p.slug}`} className="group block">
                       <div className="relative overflow-hidden bg-brand-light aspect-[3/4]">
-                        {item.image ? (
+                        {p.image ? (
                           <Image
-                            src={item.image}
-                            alt={item.name}
+                            src={p.image}
+                            alt={p.name}
                             fill
                             className="object-cover group-hover:scale-105 transition-transform duration-700"
                             sizes="(max-width: 768px) 45vw, (max-width: 1024px) 30vw, 22vw"
@@ -252,7 +353,7 @@ export default function ShopPageClient() {
                             {t("common.sale")}
                           </span>
                         )}
-                        {!outOfStock && !onSale && item.featured && (
+                        {!outOfStock && !onSale && p.featured && (
                           <span className="absolute top-3 left-3 bg-[#232323] text-white uppercase text-[8px] tracking-[0.15em] px-3 py-1.5">
                             {t("common.featured")}
                           </span>
@@ -265,17 +366,25 @@ export default function ShopPageClient() {
                       </div>
                       <div className="mt-4">
                         <p className="text-brand-muted uppercase text-[9px] tracking-widest">
-                          {item.category?.title || "Uncategorized"}
+                          {p.category?.title || "Uncategorized"}
                         </p>
-                        <p className="text-brand-text text-sm mt-1">{item.name}</p>
+                        <p className="text-brand-text text-sm mt-1">{p.name}</p>
                         <div className="flex items-center gap-2 mt-1">
-                          <p className={`text-sm font-medium ${onSale ? "text-[#C08A6F]" : "text-brand-text"}`}>
-                            {formatPrice(item.price)}
-                          </p>
-                          {onSale && (
-                            <p className="text-[#999] text-sm line-through">
-                              {formatPrice(item.comparePrice!)}
+                          {p.priceType === "range" && p.priceMax ? (
+                            <p className="text-sm font-medium text-brand-text">
+                              {formatPrice(p.price)} &ndash; {formatPrice(p.priceMax)}
                             </p>
+                          ) : (
+                            <>
+                              <p className={`text-sm font-medium ${onSale ? "text-[#C08A6F]" : "text-brand-text"}`}>
+                                {formatPrice(p.price)}
+                              </p>
+                              {onSale && (
+                                <p className="text-[#999] text-sm line-through">
+                                  {formatPrice(p.comparePrice!)}
+                                </p>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>
@@ -293,12 +402,12 @@ export default function ShopPageClient() {
                 onClick={() => setVisibleCount((prev) => prev + 12)}
                 className="inline-block uppercase text-[10px] tracking-[0.2em] text-[#1A1A1A] border border-[#1A1A1A]/20 px-10 py-3.5 hover:border-[#C08A6F] hover:text-[#C08A6F] transition-colors"
               >
-                {t("shop.loadMore", { n: String(filtered.length - visibleCount) })}
+                {t("shop.loadMore", { n: String(gridItems.length - visibleCount) })}
               </button>
             </div>
           )}
 
-          {!loading && filtered.length === 0 && (
+          {!loading && gridItems.length === 0 && (
             <div className="text-center py-20">
               <p className="text-brand-muted text-sm">
                 {t("shop.noResults")}

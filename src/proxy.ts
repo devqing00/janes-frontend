@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
 const secret = new TextEncoder().encode(
-  process.env.ADMIN_JWT_SECRET || "fallback-secret-change-me"
+  process.env.ADMIN_JWT_SECRET ?? ""
 );
 
 export async function proxy(request: NextRequest) {
@@ -12,7 +12,7 @@ export async function proxy(request: NextRequest) {
   // Allow /admin/login without auth
   if (pathname === "/admin/login") {
     const token = request.cookies.get("janes-admin-token")?.value;
-    if (token) {
+    if (token && secret.length > 0) {
       try {
         await jwtVerify(token, secret);
         // Already authenticated — redirect to dashboard
@@ -26,6 +26,11 @@ export async function proxy(request: NextRequest) {
 
   // Protect all other /admin routes
   if (pathname.startsWith("/admin")) {
+    if (secret.length === 0) {
+      // No secret configured — block access entirely
+      return NextResponse.redirect(new URL("/admin/login", request.url));
+    }
+
     const token = request.cookies.get("janes-admin-token")?.value;
     if (!token) {
       return NextResponse.redirect(new URL("/admin/login", request.url));

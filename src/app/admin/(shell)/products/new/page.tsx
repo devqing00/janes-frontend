@@ -28,10 +28,12 @@ export default function NewProductPage() {
     categoryId: "",
     subcategoryId: "",
     tagIds: [] as string[],
+    priceType: "single" as "single" | "range",
     price: "",
+    priceMax: "",
     description: "",
     details: "",
-    sizes: "XS, S, M, L, XL",
+    sizes: "",
     status: "draft",
   });
 
@@ -44,6 +46,13 @@ export default function NewProductPage() {
     () => allCategories.filter((c) => c.level === 3 && c.parent?._id === form.subcategoryId),
     [allCategories, form.subcategoryId]
   );
+
+  // Detect if the selected main category is "fabrics" — fabric products are thin records
+  const isFabricCategory = useMemo(() => {
+    if (!form.categoryId) return false;
+    const mainCat = allCategories.find((c) => c._id === form.categoryId);
+    return mainCat?.slug === "fabrics";
+  }, [allCategories, form.categoryId]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -60,7 +69,7 @@ export default function NewProductPage() {
               .replace(/(^-|-$)/g, ""),
           }
         : {}),
-      // Reset child selections when parent changes 
+      // Reset child selections when parent changes
       ...(name === "categoryId" ? { subcategoryId: "", tagIds: [] } : {}),
       ...(name === "subcategoryId" ? { tagIds: [] } : {}),
     }));
@@ -77,19 +86,80 @@ export default function NewProductPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch("/api/admin/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          images: images.map((img) => img.assetRef),
-        }),
-      });
-      if (res.ok) {
-        toast("Product created successfully");
-        router.push("/admin/products");
+      if (isFabricCategory) {
+        // Fabric mode: create one product per uploaded image
+        if (images.length === 0) {
+          toast("Upload at least one image", "error");
+          setSaving(false);
+          return;
+        }
+        if (form.tagIds.length === 0) {
+          toast("Select a tag", "error");
+          setSaving(false);
+          return;
+        }
+
+        const selectedTag = allCategories.find((c) => form.tagIds.includes(c._id) && c.level === 3);
+        const tagName = selectedTag?.title || "Fabric";
+        const tagSlug = selectedTag?.slug || "variant";
+
+        let created = 0;
+        for (let i = 0; i < images.length; i++) {
+          const ts = Date.now();
+          const res = await fetch("/api/admin/products", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              categoryId: form.categoryId,
+              subcategoryId: form.subcategoryId,
+              tagIds: form.tagIds,
+              images: [images[i].assetRef],
+              status: form.status,
+              isFabricVariant: true,
+              name: `${tagName} Variant ${ts}-${i}`,
+              slug: `fabric-${tagSlug}-${ts}-${i}`,
+              price: 0,
+            }),
+          });
+          if (res.ok) created++;
+        }
+
+        if (created > 0) {
+          toast(`${created} fabric variant${created > 1 ? "s" : ""} created`);
+          router.push("/admin/products");
+        } else {
+          toast("Failed to create variants", "error");
+        }
       } else {
-        toast("Failed to create product", "error");
+        // Regular product
+        const body: Record<string, unknown> = {
+          categoryId: form.categoryId,
+          subcategoryId: form.subcategoryId,
+          tagIds: form.tagIds,
+          images: images.map((img) => img.assetRef),
+          status: form.status,
+          isFabricVariant: false,
+          name: form.name,
+          slug: form.slug,
+          priceType: form.priceType,
+          price: form.price,
+          priceMax: form.priceMax,
+          description: form.description,
+          details: form.details,
+          sizes: form.sizes,
+        };
+
+        const res = await fetch("/api/admin/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (res.ok) {
+          toast("Product created successfully");
+          router.push("/admin/products");
+        } else {
+          toast("Failed to create product", "error");
+        }
       }
     } catch {
       toast("Something went wrong", "error");
@@ -121,18 +191,35 @@ export default function NewProductPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
-          {/* Basic info */}
+          {/* Category selection — always visible */}
           <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 space-y-5">
-            <h2 className="font-medium text-[#1A1A1A] text-sm uppercase tracking-widest">Basic Information</h2>
+            <h2 className="font-medium text-[#1A1A1A] text-sm uppercase tracking-widest">
+              {isFabricCategory ? "Fabric Variant" : "Basic Information"}
+            </h2>
+
+            {isFabricCategory && (
+              <div className="bg-[#FDF8F4] border border-[#E8DED5] rounded-lg p-4 text-xs text-[#666] leading-relaxed">
+                <strong className="text-[#C08A6F]">Fabric mode:</strong> Each uploaded image becomes a separate variant.
+                Pricing, unit, and descriptions are set on the tag in&nbsp;
+                <span className="font-medium text-[#1A1A1A]">Categories</span>.
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-              <div className="sm:col-span-2">
-                <label className="text-[#666] text-xs block mb-1.5">Product Name</label>
-                <input name="name" required value={form.name} onChange={handleChange} className={inputClass} placeholder="e.g. Cream Linen Kimono Set" />
-              </div>
-              <div className="sm:col-span-2">
-                <label className="text-[#666] text-xs block mb-1.5">URL Slug</label>
-                <input name="slug" required value={form.slug} onChange={handleChange} className={inputClass + " font-mono text-xs"} placeholder="cream-linen-kimono-set" />
-              </div>
+              {/* Name & slug — only for regular products */}
+              {!isFabricCategory && (
+                <>
+                  <div className="sm:col-span-2">
+                    <label className="text-[#666] text-xs block mb-1.5">Product Name</label>
+                    <input name="name" required value={form.name} onChange={handleChange} className={inputClass} placeholder="e.g. Cream Linen Kimono Set" />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="text-[#666] text-xs block mb-1.5">URL Slug</label>
+                    <input name="slug" required value={form.slug} onChange={handleChange} className={inputClass + " font-mono text-xs"} placeholder="cream-linen-kimono-set" />
+                  </div>
+                </>
+              )}
+
               <div>
                 <label htmlFor="categoryId" className="text-[#666] text-xs block mb-1.5">Category</label>
                 <select id="categoryId" name="categoryId" value={form.categoryId} onChange={handleChange} className={inputClass} required>
@@ -153,7 +240,7 @@ export default function NewProductPage() {
               </div>
               {tags.length > 0 && (
                 <div className="sm:col-span-2">
-                  <label className="text-[#666] text-xs block mb-1.5">Tags</label>
+                  <label className="text-[#666] text-xs block mb-1.5">{isFabricCategory ? "Tag (required)" : "Tags"}</label>
                   <div className="flex flex-wrap gap-2">
                     {tags.map((tag) => (
                       <button key={tag._id} type="button" onClick={() => toggleTag(tag._id)}
@@ -164,29 +251,72 @@ export default function NewProductPage() {
                   </div>
                 </div>
               )}
-              <div>
-                <label className="text-[#666] text-xs block mb-1.5">Price (NGN)</label>
-                <input name="price" type="number" required value={form.price} onChange={handleChange} className={inputClass} placeholder="420" />
-              </div>
-              <div>
-                <label className="text-[#666] text-xs block mb-1.5">Sizes (comma separated)</label>
-                <input name="sizes" value={form.sizes} onChange={handleChange} className={inputClass} placeholder="XS, S, M, L, XL" />
-              </div>
+
+              {/* Pricing & sizes — only for regular products */}
+              {!isFabricCategory && (
+                <>
+                  <div className="sm:col-span-2">
+                    <label htmlFor="priceType" className="text-[#666] text-xs block mb-1.5">Price Type</label>
+                    <div className="flex gap-3">
+                      {(["single", "range"] as const).map((pt) => (
+                        <button
+                          key={pt}
+                          type="button"
+                          onClick={() => setForm((prev) => ({ ...prev, priceType: pt, ...(pt === "single" ? { priceMax: "" } : {}) }))}
+                          className={`flex-1 text-xs py-2.5 rounded-lg border transition-colors ${
+                            form.priceType === pt
+                              ? "bg-[#C08A6F] text-white border-[#C08A6F]"
+                              : "bg-white text-[#666] border-gray-200 hover:border-[#C08A6F]"
+                          }`}
+                        >
+                          {pt === "single" ? "Single (fixed)" : "Range (min – max)"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[#666] text-xs block mb-1.5">
+                      {form.priceType === "range" ? "Min Price (NGN)" : "Price (NGN)"}
+                    </label>
+                    <input name="price" type="number" required value={form.price} onChange={handleChange} className={inputClass} placeholder="420" />
+                  </div>
+                  {form.priceType === "range" && (
+                    <div>
+                      <label className="text-[#666] text-xs block mb-1.5">Max Price (NGN)</label>
+                      <input name="priceMax" type="number" required value={form.priceMax} onChange={handleChange} className={inputClass} placeholder="5000" />
+                    </div>
+                  )}
+                  {form.priceType !== "range" && (
+                    <div>
+                      <label className="text-[#666] text-xs block mb-1.5">Sizes (comma separated)</label>
+                      <input name="sizes" value={form.sizes} onChange={handleChange} className={inputClass} placeholder="XS, S, M, L, XL" />
+                    </div>
+                  )}
+                  {form.priceType === "range" && (
+                    <div className="sm:col-span-2">
+                      <label className="text-[#666] text-xs block mb-1.5">Sizes (comma separated)</label>
+                      <input name="sizes" value={form.sizes} onChange={handleChange} className={inputClass} placeholder="XS, S, M, L, XL" />
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
 
-          {/* Description */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 space-y-5">
-            <h2 className="font-medium text-[#1A1A1A] text-sm uppercase tracking-widest">Description</h2>
-            <div>
-              <label className="text-[#666] text-xs block mb-1.5">Product Description</label>
-              <textarea name="description" rows={4} value={form.description} onChange={handleChange} className={inputClass + " resize-none"} placeholder="Describe the product, its materials, and styling suggestions..." />
+          {/* Description — only for regular products */}
+          {!isFabricCategory && (
+            <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 space-y-5">
+              <h2 className="font-medium text-[#1A1A1A] text-sm uppercase tracking-widest">Description</h2>
+              <div>
+                <label className="text-[#666] text-xs block mb-1.5">Product Description</label>
+                <textarea name="description" rows={4} value={form.description} onChange={handleChange} className={inputClass + " resize-none"} placeholder="Describe the product, its materials, and styling suggestions..." />
+              </div>
+              <div>
+                <label className="text-[#666] text-xs block mb-1.5">Details (one per line)</label>
+                <textarea name="details" rows={4} value={form.details} onChange={handleChange} className={inputClass + " resize-none"} placeholder={"100% Italian linen\nRelaxed oversized fit\nHand wash cold"} />
+              </div>
             </div>
-            <div>
-              <label className="text-[#666] text-xs block mb-1.5">Details (one per line)</label>
-              <textarea name="details" rows={4} value={form.details} onChange={handleChange} className={inputClass + " resize-none"} placeholder={"100% Italian linen\nRelaxed oversized fit\nHand wash cold"} />
-            </div>
-          </div>
+          )}
 
           {/* Images */}
           <ImageUpload images={images} onImagesChange={setImages} />
@@ -205,7 +335,7 @@ export default function NewProductPage() {
                 Cancel
               </button>
               <button type="submit" disabled={saving} className="flex-1 sm:flex-none bg-[#232323] text-white text-sm px-6 py-2.5 rounded-lg hover:bg-[#C08A6F] transition-colors disabled:opacity-50">
-                {saving ? "Saving..." : "Save Product"}
+                {saving ? "Saving..." : isFabricCategory && images.length > 1 ? `Save ${images.length} Variants` : "Save Product"}
               </button>
             </div>
           </div>

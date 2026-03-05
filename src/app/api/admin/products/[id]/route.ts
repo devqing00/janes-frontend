@@ -11,7 +11,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   try {
     const product = await writeClient.fetch(
       `*[_type == "product" && _id == $id][0] {
-        _id, name, slug, price, description, details, sizes, status, _createdAt,
+        _id, name, slug, price, priceType, priceMax, description, details, sizes, status, _createdAt,
+        isFabricVariant,
         "categoryId": category._ref,
         "subcategoryId": subcategory._ref,
         "tagIds": tags[]._ref,
@@ -44,14 +45,17 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   try {
     const body = await request.json();
     const patch: Record<string, unknown> = {
-      name: body.name,
+      name: body.name || "",
       slug: { _type: "slug", current: body.slug },
+      priceType: body.priceType || "single",
       price: Number(body.price),
+      priceMax: body.priceType === "range" && body.priceMax ? Number(body.priceMax) : null,
       description: body.description || "",
       details: body.details ? body.details.split("\n").filter(Boolean) : [],
-      sizes: body.sizes ? body.sizes.split(",").map((s: string) => s.trim()) : [],
+      sizes: body.sizes ? body.sizes.split(",").map((s: string) => s.trim()).filter(Boolean) : [],
       images: body.images || [],
       status: body.status || "draft",
+      isFabricVariant: body.isFabricVariant === true,
     };
 
     // Category reference
@@ -88,6 +92,9 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   const { id } = await params;
 
   try {
+    // Verify the document is actually a product before deleting
+    const doc = await writeClient.fetch(`*[_type == "product" && _id == $id][0]{ _id }`, { id });
+    if (!doc) return NextResponse.json({ error: "Product not found" }, { status: 404 });
     await writeClient.delete(id);
     return NextResponse.json({ success: true });
   } catch (err) {

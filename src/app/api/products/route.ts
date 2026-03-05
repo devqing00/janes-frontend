@@ -5,18 +5,20 @@ export const dynamic = "force-dynamic";
 
 // Common projection that dereferences category references
 const PRODUCT_LIST_PROJ = `{
-  _id, name, "slug": slug.current, price, comparePrice, inStock, featured, status,
+  _id, name, "slug": slug.current, price, priceType, priceMax, comparePrice, inStock, featured, status,
+  isFabricVariant,
   "category": category->{ _id, title, "slug": slug.current, level },
   "subcategory": subcategory->{ _id, title, "slug": slug.current, level },
-  "tags": tags[]->{ _id, title, "slug": slug.current, level },
+  "tags": tags[]->{ _id, title, "slug": slug.current, level, fabricPrice, fabricPricePerN, fabricUnit },
   "image": images[0].asset->url
 }`;
 
 const PRODUCT_DETAIL_PROJ = `{
-  _id, name, "slug": slug.current, price, comparePrice, inStock, description, details, sizes, status, featured,
+  _id, name, "slug": slug.current, price, priceType, priceMax, comparePrice, inStock, description, details, sizes, status, featured,
+  isFabricVariant,
   "category": category->{ _id, title, "slug": slug.current, level },
   "subcategory": subcategory->{ _id, title, "slug": slug.current, level },
-  "tags": tags[]->{ _id, title, "slug": slug.current, level },
+  "tags": tags[]->{ _id, title, "slug": slug.current, level, fabricPrice, fabricPricePerN, fabricUnit },
   "images": images[].asset->{ _id, url }
 }`;
 
@@ -27,6 +29,7 @@ export async function GET(request: Request) {
   const categorySlug = searchParams.get("category");
   const subcategorySlug = searchParams.get("subcategory");
   const tagSlug = searchParams.get("tag");
+  const fabricGroup = searchParams.get("fabricGroup"); // fabric variant group by tag slug
   const featured = searchParams.get("featured");
   const search = searchParams.get("q");
   const slug = searchParams.get("slug");
@@ -73,10 +76,29 @@ export async function GET(request: Request) {
       params = { search: `${search}*` };
     } else if (featured === "true") {
       query = `*[_type == "product" && (status == "published" || !defined(status)) && featured == true] | order(_createdAt desc)[0...8] {
-        _id, name, "slug": slug.current, price, comparePrice, inStock, featured, _createdAt,
+        _id, name, "slug": slug.current, price, priceType, priceMax, comparePrice, inStock, featured, _createdAt,
         "category": category->{ _id, title, "slug": slug.current },
         "image": images[0].asset->url
       }`;
+    } else if (fabricGroup) {
+      // Return the tag (with pricing) + all fabric variant images for a given tag slug
+      // Tag pricing fields live on the category document, not on products.
+      const tagData = await client.fetch(
+        `*[_type == "category" && slug.current == $fabricGroup][0]{
+          title, description, "slug": slug.current,
+          fabricPrice, fabricPricePerN, fabricUnit, minQuantity, maxQuantity
+        }`,
+        { fabricGroup }
+      );
+      const variants = await client.fetch(
+        `*[_type == "product" && (status == "published" || !defined(status)) && isFabricVariant == true && $fabricGroup in tags[]->slug.current] | order(_createdAt asc) {
+          _id, "slug": slug.current,
+          "image": images[0].asset->url,
+          "allImages": images[].asset->url
+        }`,
+        { fabricGroup }
+      );
+      return NextResponse.json({ tag: tagData, variants: variants ?? [] });
     } else if (tagSlug && tagSlug !== "All") {
       // Filter by tag (level 3)
       query = `*[_type == "product" && (status == "published" || !defined(status)) && $tagSlug in tags[]->slug.current] | order(_createdAt desc) ${PRODUCT_LIST_PROJ}`;

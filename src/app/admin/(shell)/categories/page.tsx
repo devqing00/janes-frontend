@@ -14,7 +14,13 @@ interface Category {
   order: number;
   description?: string;
   image?: string;
-  parent?: { _id: string; slug: string } | null;
+  parent?: { _id: string; slug: string; level?: number } | null;
+  // Fabric pricing (level 3 tags under Fabrics)
+  fabricPrice?: number | null;
+  fabricPricePerN?: number | null;
+  fabricUnit?: string | null;
+  minQuantity?: number | null;
+  maxQuantity?: number | null;
 }
 
 interface FormState {
@@ -24,9 +30,15 @@ interface FormState {
   parentId: string;
   description: string;
   order: number;
+  // Fabric fields
+  fabricPrice: string;
+  fabricPricePerN: string;
+  fabricUnit: string;
+  minQuantity: string;
+  maxQuantity: string;
 }
 
-const EMPTY_FORM: FormState = { title: "", slug: "", level: 1, parentId: "", description: "", order: 0 };
+const EMPTY_FORM: FormState = { title: "", slug: "", level: 1, parentId: "", description: "", order: 0, fabricPrice: "", fabricPricePerN: "1", fabricUnit: "yard", minQuantity: "1", maxQuantity: "" };
 const API = "/api/admin/categories";
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -85,6 +97,11 @@ export default function AdminCategoriesPage() {
       parentId: cat.parent?._id || "",
       description: cat.description || "",
       order: cat.order ?? 0,
+      fabricPrice: cat.fabricPrice != null ? String(cat.fabricPrice) : "",
+      fabricPricePerN: cat.fabricPricePerN != null ? String(cat.fabricPricePerN) : "1",
+      fabricUnit: cat.fabricUnit || "yard",
+      minQuantity: cat.minQuantity != null ? String(cat.minQuantity) : "1",
+      maxQuantity: cat.maxQuantity != null ? String(cat.maxQuantity) : "",
     });
     setShowForm(true);
   }, []);
@@ -111,6 +128,15 @@ export default function AdminCategoriesPage() {
     try {
       const body: Record<string, unknown> = { ...form, slug: form.slug || slugify(form.title) };
       if (editing) body._id = editing;
+
+      // Include fabric fields for level-3 tags
+      if (form.level === 3 && isFabricTag) {
+        body.fabricPrice = form.fabricPrice ? Number(form.fabricPrice) : null;
+        body.fabricPricePerN = form.fabricPricePerN ? Number(form.fabricPricePerN) : 1;
+        body.fabricUnit = form.fabricUnit || "yard";
+        body.minQuantity = form.minQuantity ? Number(form.minQuantity) : 1;
+        body.maxQuantity = form.maxQuantity ? Number(form.maxQuantity) : null;
+      }
 
       const res = await fetch(API, {
         method: editing ? "PATCH" : "POST",
@@ -159,6 +185,16 @@ export default function AdminCategoriesPage() {
     if (form.level === 2) return categories.filter((c) => c.level === 1);
     return categories.filter((c) => c.level === 2);
   }, [form.level, categories]);
+
+  /* ── Is this a tag under the "Fabrics" main category? ── */
+  const isFabricTag = useMemo(() => {
+    if (form.level !== 3 || !form.parentId) return false;
+    // form.parentId is the level-2 subcategory; we need to check its parent (the level-1)
+    const subcategory = categories.find((c) => c._id === form.parentId);
+    if (!subcategory?.parent?._id) return false;
+    const mainCat = categories.find((c) => c._id === subcategory.parent?._id);
+    return mainCat?.slug?.toLowerCase() === "fabrics";
+  }, [form.level, form.parentId, categories]);
 
   const inputClass = "w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#C08A6F] transition-colors bg-white";
   const isFormOpen = showForm;
@@ -221,6 +257,49 @@ export default function AdminCategoriesPage() {
               <label className="text-[#666] text-xs block mb-1.5">Description (optional)</label>
               <textarea name="description" rows={2} value={form.description} onChange={handleChange} className={inputClass + " resize-none"} placeholder="Short description..." />
             </div>
+
+            {/* Fabric pricing — only for level-3 tags under Fabrics */}
+            {isFabricTag && (
+              <div className="sm:col-span-2 bg-[#FAF8F5] rounded-lg p-4 space-y-4">
+                <p className="text-xs font-medium text-[#C08A6F] uppercase tracking-widest">Fabric Pricing</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-[#666] text-xs block mb-1.5">Price (NGN)</label>
+                    <input name="fabricPrice" type="number" min="0" step="0.01" value={form.fabricPrice} onChange={handleChange} className={inputClass} placeholder="3000" />
+                  </div>
+                  <div>
+                    <label className="text-[#666] text-xs block mb-1.5">Per N units</label>
+                    <input name="fabricPricePerN" type="number" min="1" value={form.fabricPricePerN} onChange={handleChange} className={inputClass} placeholder="1" />
+                  </div>
+                  <div>
+                    <label className="text-[#666] text-xs block mb-1.5">Unit</label>
+                    <select name="fabricUnit" value={form.fabricUnit} onChange={handleChange} className={inputClass}>
+                      <option value="yard">Yard</option>
+                      <option value="meter">Meter</option>
+                      <option value="piece">Piece</option>
+                      <option value="roll">Roll</option>
+                      <option value="kg">Kg</option>
+                      <option value="length">Length</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[#666] text-xs block mb-1.5">Min Order Quantity</label>
+                    <input name="minQuantity" type="number" min="1" value={form.minQuantity} onChange={handleChange} className={inputClass} placeholder="1" />
+                  </div>
+                  <div>
+                    <label className="text-[#666] text-xs block mb-1.5">Max Order Quantity (optional)</label>
+                    <input name="maxQuantity" type="number" min="1" value={form.maxQuantity} onChange={handleChange} className={inputClass} placeholder="No limit" />
+                  </div>
+                </div>
+                {form.fabricPrice && (
+                  <p className="text-xs text-[#666]">
+                    Preview: ₦{Number(form.fabricPrice).toLocaleString()} per {form.fabricPricePerN || 1} {form.fabricUnit}{Number(form.fabricPricePerN) !== 1 ? "s" : ""}
+                  </p>
+                )}
+              </div>
+            )}
             <div className="sm:col-span-2 flex gap-3 justify-end">
               <button type="button" onClick={cancel} className="text-[#666] text-sm px-5 py-2.5 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
               <button type="submit" disabled={saving} className="bg-[#232323] text-white text-sm px-6 py-2.5 rounded-lg hover:bg-[#C08A6F] transition-colors disabled:opacity-50">
@@ -259,13 +338,13 @@ export default function AdminCategoriesPage() {
           {tree.map((l1) => (
             <div key={l1._id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
               {/* Level 1 row */}
-              <div className={`flex items-center justify-between px-5 py-4 ${editing === l1._id ? "bg-[#FAF8F5]" : ""}`}>
-                <div className="flex items-center gap-3">
-                  <span className={`text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full font-medium ${LEVEL_COLORS[1]}`}>Main</span>
-                  <h3 className="font-medium text-[#1A1A1A] text-sm">{l1.title}</h3>
-                  <span className="text-[#999] text-xs font-mono">/{l1.slug}</span>
+              <div className={`flex items-center justify-between px-3 sm:px-5 py-3 sm:py-4 gap-2 ${editing === l1._id ? "bg-[#FAF8F5]" : ""}`}>
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                  <span className={`text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full font-medium shrink-0 ${LEVEL_COLORS[1]}`}>Main</span>
+                  <h3 className="font-medium text-[#1A1A1A] text-sm truncate">{l1.title}</h3>
+                  <span className="text-[#999] text-xs font-mono hidden sm:inline">/{l1.slug}</span>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
                   <button onClick={() => openNew(2, l1._id)} title="Add sub-section" className="text-[#999] hover:text-[#C08A6F] p-1.5 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -289,14 +368,14 @@ export default function AdminCategoriesPage() {
                 <div className="border-t border-gray-100">
                   {l1.children.map((l2) => (
                     <div key={l2._id}>
-                      <div className={`flex items-center justify-between px-5 py-3 pl-10 ${editing === l2._id ? "bg-[#FAF8F5]" : "bg-gray-50/50"}`}>
-                        <div className="flex items-center gap-3">
-                          <span className="text-[#ccc] text-xs">├─</span>
-                          <span className={`text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full font-medium ${LEVEL_COLORS[2]}`}>Sub</span>
-                          <span className="text-[#1A1A1A] text-sm">{l2.title}</span>
-                          <span className="text-[#999] text-xs font-mono">/{l2.slug}</span>
+                      <div className={`flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 pl-6 sm:pl-10 gap-2 ${editing === l2._id ? "bg-[#FAF8F5]" : "bg-gray-50/50"}`}>
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                          <span className="text-[#ccc] text-xs hidden sm:inline">├─</span>
+                          <span className={`text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full font-medium shrink-0 ${LEVEL_COLORS[2]}`}>Sub</span>
+                          <span className="text-[#1A1A1A] text-sm truncate">{l2.title}</span>
+                          <span className="text-[#999] text-xs font-mono hidden sm:inline">/{l2.slug}</span>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
                           <button onClick={() => openNew(3, l2._id)} title="Add tag" className="text-[#999] hover:text-[#C08A6F] p-1.5 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -319,14 +398,19 @@ export default function AdminCategoriesPage() {
                       {l2.children.length > 0 && (
                         <div>
                           {l2.children.map((l3) => (
-                            <div key={l3._id} className={`flex items-center justify-between px-5 py-2.5 pl-16 ${editing === l3._id ? "bg-[#FAF8F5]" : ""}`}>
-                              <div className="flex items-center gap-3">
-                                <span className="text-[#ddd] text-xs">│ └─</span>
-                                <span className={`text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full font-medium ${LEVEL_COLORS[3]}`}>Tag</span>
-                                <span className="text-[#444] text-sm">{l3.title}</span>
-                                <span className="text-[#bbb] text-xs font-mono">/{l3.slug}</span>
+                            <div key={l3._id} className={`flex items-center justify-between px-3 sm:px-5 py-2 sm:py-2.5 pl-9 sm:pl-16 gap-2 ${editing === l3._id ? "bg-[#FAF8F5]" : ""}`}>
+                              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-wrap">
+                                <span className="text-[#ddd] text-xs hidden sm:inline">│ └─</span>
+                                <span className={`text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full font-medium shrink-0 ${LEVEL_COLORS[3]}`}>Tag</span>
+                                <span className="text-[#444] text-sm truncate">{l3.title}</span>
+                                <span className="text-[#bbb] text-xs font-mono hidden sm:inline">/{l3.slug}</span>
+                                {l3.fabricPrice != null && (
+                                  <span className="text-[10px] text-[#C08A6F] bg-[#C08A6F]/10 px-2 py-0.5 rounded-full whitespace-nowrap">
+                                    ₦{l3.fabricPrice.toLocaleString()}/{l3.fabricPricePerN ?? 1} {l3.fabricUnit ?? "yard"}{(l3.fabricPricePerN ?? 1) !== 1 ? "s" : ""}
+                                  </span>
+                                )}
                               </div>
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
                                 <button onClick={() => openEdit(l3)} title="Edit" className="text-[#bbb] hover:text-[#1A1A1A] p-1.5 transition-colors">
                                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />

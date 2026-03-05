@@ -13,6 +13,8 @@ interface FeaturedProduct {
   name: string;
   slug: string;
   price: number;
+  priceType?: "single" | "range";
+  priceMax?: number;
   image: string | null;
   featured?: boolean;
   category?: string;
@@ -150,7 +152,11 @@ export default function FeaturedProducts() {
                   </div>
                   <div className="mt-4">
                     <h3 className="text-[#1A1A1A] text-sm font-medium">{item.name}</h3>
-                    <p className="text-[#666] text-sm mt-1">{formatPrice(item.price)}</p>
+                    <p className="text-[#666] text-sm mt-1">
+                      {item.priceType === "range" && item.priceMax
+                        ? <>{formatPrice(item.price)} &ndash; {formatPrice(item.priceMax)}</>
+                        : formatPrice(item.price)}
+                    </p>
                   </div>
                 </Link>
               </motion.div>

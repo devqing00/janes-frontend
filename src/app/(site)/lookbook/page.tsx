@@ -2,8 +2,20 @@ import LookbookPageClient from "@/components/LookbookPageClient";
 import { client } from "@/lib/sanity";
 
 export const metadata = {
-  title: "Lookbook — JANES",
-  description: "A visual diary of our latest collection captured in editorial style.",
+  title: "Lookbook | JANES — Editorial Fashion Photography",
+  description:
+    "Explore the JANES lookbook — a visual diary of our latest Nigerian fashion collections captured with editorial artistry. Discover styling inspiration rooted in contemporary African culture.",
+  keywords: [
+    "JANES lookbook", "Nigerian fashion editorial", "African fashion photography",
+    "Lagos fashion lookbook", "contemporary African style", "JANES fashion campaign",
+  ],
+  alternates: { canonical: "/lookbook" },
+  openGraph: {
+    title: "Lookbook | JANES — Editorial Fashion Photography",
+    description: "A visual diary of JANES latest collections — editorial fashion photography celebrating African aesthetics.",
+    url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://janes.com"}/lookbook`,
+    type: "website",
+  },
 };
 
 async function getLookbookContent() {

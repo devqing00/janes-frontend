@@ -147,9 +147,9 @@ export default function LookbookAdminPage() {
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="font-serif text-2xl text-[#1A1A1A] tracking-wide">Lookbook</h1>
+          <h1 className="font-serif text-xl sm:text-2xl text-[#1A1A1A] tracking-wide">Lookbook</h1>
           <p className="text-sm text-gray-500 mt-1">
             Manage lookbook content and images shown on the public Lookbook page
           </p>
@@ -157,7 +157,7 @@ export default function LookbookAdminPage() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="bg-[#1A1A1A] text-white text-sm px-6 py-2.5 hover:bg-[#333] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="self-start bg-[#1A1A1A] text-white text-sm px-6 py-2.5 hover:bg-[#333] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shrink-0"
         >
           {saving && (
             <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -357,7 +357,7 @@ export default function LookbookAdminPage() {
       </div>
 
       {/* Sticky Save Bar */}
-      <div className="fixed bottom-0 left-64 right-0 bg-white border-t border-gray-200 px-8 py-4 flex items-center justify-between z-30">
+      <div className="fixed bottom-0 left-0 lg:left-64 right-0 bg-white border-t border-gray-200 px-4 sm:px-8 py-3 sm:py-4 flex items-center justify-between z-30">
         <p className="text-xs text-gray-400">
           {images.length} image{images.length !== 1 ? "s" : ""} · Changes are saved manually
         </p>

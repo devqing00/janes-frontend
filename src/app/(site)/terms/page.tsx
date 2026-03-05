@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import PageHero from "@/components/PageHero";
 import { useLocale } from "@/components/LocaleProvider";
 
@@ -17,11 +16,7 @@ export default function TermsPage() {
 
       <section className="bg-[#FAF8F5] py-24 md:py-36">
         <div className="mx-auto max-w-[900px] px-6 md:px-12">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-          >
+          <div className="animate-fadeIn">
             <p className="text-[#666] text-xs uppercase tracking-widest mb-12">
               {t("terms.lastUpdated")}
             </p>
@@ -84,7 +79,7 @@ export default function TermsPage() {
                 </p>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
     </>

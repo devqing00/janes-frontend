@@ -62,6 +62,9 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   const { id } = await params;
 
   try {
+    // Verify the document is actually a collection before deleting
+    const doc = await writeClient.fetch(`*[_type == "collection" && _id == $id][0]{ _id }`, { id });
+    if (!doc) return NextResponse.json({ error: "Collection not found" }, { status: 404 });
     await writeClient.delete(id);
     return NextResponse.json({ success: true });
   } catch (err) {

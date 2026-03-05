@@ -46,13 +46,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "email and items are required" }, { status: 400 });
     }
 
-    // ── Validate prices (especially range-priced products) ──
+    // ── Validate prices (especially range-priced products and fabric variants) ──
     const productIds = [...new Set(items.map((i) => i._id))];
-    const products: { _id: string; price: number; priceType?: string; priceMax?: number }[] =
-      await client.fetch(
-        `*[_type == "product" && _id in $ids]{ _id, price, priceType, priceMax }`,
-        { ids: productIds }
-      );
+    const products: {
+      _id: string;
+      price: number;
+      priceType?: string;
+      priceMax?: number;
+      isFabricVariant?: boolean;
+      fabricPrice?: number;
+      fabricPricePerN?: number;
+    }[] = await client.fetch(
+      `*[_type == "product" && _id in $ids]{
+        _id, price, priceType, priceMax, isFabricVariant,
+        "fabricPrice": tags[0]->fabricPrice,
+        "fabricPricePerN": tags[0]->fabricPricePerN
+      }`,
+      { ids: productIds }
+    );
     const productMap = new Map(products.map((p) => [p._id, p]));
 
     for (const item of items) {
@@ -60,7 +71,21 @@ export async function POST(req: NextRequest) {
       if (!product) {
         return NextResponse.json({ error: `Product "${item.name}" not found` }, { status: 400 });
       }
-      if (product.priceType === "range" && product.priceMax) {
+
+      if (product.isFabricVariant && product.fabricPrice != null) {
+        // Fabric variants: price per unit = fabricPrice / fabricPricePerN
+        const perN = product.fabricPricePerN && product.fabricPricePerN > 0
+          ? product.fabricPricePerN
+          : 1;
+        const expectedUnitPrice = product.fabricPrice / perN;
+        // Allow a small floating-point tolerance (< ₦1)
+        if (Math.abs(item.price - expectedUnitPrice) > 1) {
+          return NextResponse.json(
+            { error: `Price mismatch for "${item.name}"` },
+            { status: 400 }
+          );
+        }
+      } else if (product.priceType === "range" && product.priceMax) {
         if (item.price < product.price || item.price > product.priceMax) {
           return NextResponse.json(
             { error: `Price for "${item.name}" must be between ${product.price} and ${product.priceMax}` },
@@ -68,7 +93,7 @@ export async function POST(req: NextRequest) {
           );
         }
       } else {
-        // For single-price products, verify the price matches
+        // Single-price products: verify exact match
         if (item.price !== product.price) {
           return NextResponse.json(
             { error: `Price mismatch for "${item.name}"` },

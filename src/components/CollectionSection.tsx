@@ -11,19 +11,19 @@ const FALLBACK_COLLECTIONS = [
   {
     title: "Harmattan",
     year: "2026",
-    image: "https://images.unsplash.com/photo-1590735213920-68192a487bc2?w=800&q=80",
+    image: "https://images.pexels.com/photos/6153354/pexels-photo-6153354.jpeg?auto=compress&cs=tinysrgb&w=800",
     slug: "harmattan-2026",
   },
   {
     title: "Festive",
     year: "2025",
-    image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&q=80",
+    image: "https://images.pexels.com/photos/7679863/pexels-photo-7679863.jpeg?auto=compress&cs=tinysrgb&w=800",
     slug: "festive-2025",
   },
   {
     title: "Dry Season",
     year: "2025",
-    image: "https://images.unsplash.com/photo-1617137968427-85924c800a22?w=800&q=80",
+    image: "https://images.pexels.com/photos/6140676/pexels-photo-6140676.jpeg?auto=compress&cs=tinysrgb&w=800",
     slug: "dry-season-2025",
   },
 ];

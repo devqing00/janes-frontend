@@ -26,8 +26,8 @@ interface ProductData {
   details: string[];
   sizes: string[];
   images: ProductImage[];
-  category: string;
-  subcategory?: string;
+  category?: { _id: string; title: string; slug: string } | string;
+  subcategory?: { _id: string; title: string; slug: string } | string;
 }
 
 interface RelatedProduct {
@@ -78,12 +78,21 @@ export default function ProductDetailClient({
   };
 
   const images = product.images?.filter((img) => img?.url) || [];
+
+  // Resolve category — could be an object { _id, title, slug } or a plain string
+  const catSlug = typeof product.category === "object" && product.category?.slug
+    ? product.category.slug
+    : typeof product.category === "string" ? product.category : "";
+  const catTitle = typeof product.category === "object" && product.category?.title
+    ? product.category.title
+    : typeof product.category === "string" ? product.category : "";
+
   const categoryLabels: Record<string, string> = {
     womenswear: "Womenswear",
     menswear: "Menswear",
     fabrics: "Raw Fabrics",
   };
-  const categoryLabel = categoryLabels[product.category] || product.category;
+  const categoryLabel = categoryLabels[catSlug] || catTitle || catSlug;
   const inWishlist = isInWishlist(product._id);
   const onSale = product.comparePrice && product.comparePrice > product.price;
 
@@ -95,7 +104,7 @@ export default function ProductDetailClient({
           <nav className="flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-[#666]">
             <Link href="/shop" className="hover:text-[#C08A6F] transition-colors">Shop</Link>
             <span>/</span>
-            <Link href={`/shop?category=${product.category}`} className="hover:text-[#C08A6F] transition-colors">{categoryLabel}</Link>
+            <Link href={`/shop?category=${catSlug}`} className="hover:text-[#C08A6F] transition-colors">{categoryLabel}</Link>
             <span>/</span>
             <span className="text-[#1A1A1A]">{product.name}</span>
           </nav>

@@ -17,9 +17,9 @@ export default function Footer() {
 
   const footerLinks = {
     shop: [
-      { label: t("categories.womenswear"), href: "/shop?category=Womenswear" },
-      { label: t("categories.menswear"), href: "/shop?category=Menswear" },
-      { label: t("categories.fabrics"), href: "/shop?category=Fabrics" },
+      { label: t("categories.womenswear"), href: "/shop?category=womenswear" },
+      { label: t("categories.menswear"), href: "/shop?category=menswear" },
+      { label: t("categories.fabrics"), href: "/shop?category=fabrics" },
       { label: t("footer.newArrivals"), href: "/shop" },
     ],
     company: [

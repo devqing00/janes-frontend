@@ -77,7 +77,9 @@ export async function GET(request: Request) {
     } else if (featured === "true") {
       query = `*[_type == "product" && (status == "published" || !defined(status)) && featured == true] | order(_createdAt desc)[0...8] {
         _id, name, "slug": slug.current, price, priceType, priceMax, comparePrice, inStock, featured, _createdAt,
+        isFabricVariant,
         "category": category->{ _id, title, "slug": slug.current },
+        "tags": tags[]->{ _id, title, "slug": slug.current, level, fabricPrice, fabricPricePerN, fabricUnit },
         "image": images[0].asset->url
       }`;
     } else if (fabricGroup) {

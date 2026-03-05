@@ -9,6 +9,15 @@ type RecentProduct = {
   category: string;
   price: number;
   status: string;
+  imageUrl?: string;
+  isFabricVariant?: boolean;
+  tag?: {
+    title: string;
+    slug: string;
+    fabricPrice: number;
+    fabricPricePerN: number;
+    fabricUnit: string;
+  };
 };
 
 type OrderSummary = {
@@ -19,6 +28,22 @@ type OrderSummary = {
 };
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
+function getDisplayPrice(p: RecentProduct): string {
+  if (p.isFabricVariant && p.tag?.fabricPrice) {
+    const perN = p.tag.fabricPricePerN > 0 ? p.tag.fabricPricePerN : 1;
+    const unit = p.tag.fabricUnit || "yard";
+    return `₦${(p.tag.fabricPrice / perN).toLocaleString()}/${unit}`;
+  }
+  return `₦${(p.price ?? 0).toLocaleString()}`;
+}
+
+function getDisplayName(p: RecentProduct): string {
+  if (p.isFabricVariant && p.tag?.title) {
+    return p.tag.title;
+  }
+  return p.name;
+}
 
 export default function AdminDashboardPage() {
   const { data: products = [], isLoading: productsLoading } = useSWR<RecentProduct[]>(
@@ -189,7 +214,7 @@ export default function AdminDashboardPage() {
           <div className="p-5 space-y-4">
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="flex items-center gap-4">
-                <div className="skeleton w-10 h-12 shrink-0" />
+                <div className="skeleton w-10 h-12 shrink-0 rounded" />
                 <div className="flex-1 space-y-2">
                   <div className="skeleton h-3 w-40" />
                   <div className="skeleton h-2 w-24" />
@@ -215,8 +240,8 @@ export default function AdminDashboardPage() {
                 <tr className="text-left text-[10px] uppercase tracking-widest text-[#666] border-b border-gray-100">
                   <th className="px-5 py-3 font-medium">Product</th>
                   <th className="px-5 py-3 font-medium">Category</th>
-                  <th className="px-5 py-3 font-medium">Price</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
+                  <th className="px-5 py-3 font-medium text-right">Price</th>
+                  <th className="px-5 py-3 font-medium text-right">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -226,20 +251,38 @@ export default function AdminDashboardPage() {
                     onClick={() => window.location.href = `/admin/products/${product._id}`}
                     className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors cursor-pointer"
                   >
-                    <td className="px-5 py-3.5 text-sm text-[#1A1A1A] font-medium">
-                      {product.name}
+                    <td className="px-5 py-3 text-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-11 rounded bg-[#F5F0EB] overflow-hidden relative flex-shrink-0">
+                          {product.imageUrl ? (
+                            <img src={product.imageUrl} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-[#C08A6F]/40">
+                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" /></svg>
+                            </div>
+                          )}
+                        </div>
+                        <span className="font-medium text-[#1A1A1A] truncate max-w-[280px]">
+                          {getDisplayName(product)}
+                        </span>
+                      </div>
                     </td>
-                    <td className="px-5 py-3.5 text-sm text-[#666]">
-                      {product.category}
+                    <td className="px-5 py-3 text-sm text-[#666]">
+                      <span className="inline-flex items-center gap-1.5">
+                        {product.isFabricVariant && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#C08A6F] inline-block" title="Fabric variant" />
+                        )}
+                        {product.category}
+                      </span>
                     </td>
-                    <td className="px-5 py-3.5 text-sm text-[#1A1A1A]">
-                      ₦{(product.price ?? 0).toLocaleString()}
+                    <td className="px-5 py-3 text-sm text-[#1A1A1A] text-right font-medium tabular-nums">
+                      {getDisplayPrice(product)}
                     </td>
-                    <td className="px-5 py-3.5">
+                    <td className="px-5 py-3 text-right">
                       <span
-                        className={`inline-block text-[10px] uppercase tracking-widest px-2.5 py-1 rounded-full ${
+                        className={`inline-block text-[10px] uppercase tracking-widest px-2.5 py-1 rounded-full font-medium ${
                           product.status === "published"
-                            ? "bg-green-50 text-green-700"
+                            ? "bg-emerald-50 text-emerald-700"
                             : "bg-amber-50 text-amber-700"
                         }`}
                       >
@@ -257,20 +300,32 @@ export default function AdminDashboardPage() {
                 <Link
                   key={product._id}
                   href={`/admin/products/${product._id}`}
-                  className="flex items-center justify-between px-4 py-3.5 hover:bg-gray-50/50"
+                  className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50/50"
                 >
-                  <div>
-                    <p className="text-sm font-medium text-[#1A1A1A]">
-                      {product.name}
+                  <div className="w-10 h-12 rounded bg-[#F5F0EB] overflow-hidden relative flex-shrink-0">
+                    {product.imageUrl ? (
+                      <img src={product.imageUrl} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[#C08A6F]/40">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" /></svg>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-[#1A1A1A] truncate">
+                      {getDisplayName(product)}
                     </p>
-                    <p className="text-xs text-[#666] mt-0.5">
-                      {product.category} &middot; ₦{(product.price ?? 0).toLocaleString()}
+                    <p className="text-xs text-[#666] mt-0.5 flex items-center gap-1">
+                      {product.isFabricVariant && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#C08A6F] inline-block" />
+                      )}
+                      {product.category} &middot; {getDisplayPrice(product)}
                     </p>
                   </div>
                   <span
-                    className={`text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full shrink-0 ${
+                    className={`text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full shrink-0 font-medium ${
                       product.status === "published"
-                        ? "bg-green-50 text-green-700"
+                        ? "bg-emerald-50 text-emerald-700"
                         : "bg-amber-50 text-amber-700"
                     }`}
                   >

@@ -8,9 +8,10 @@ import { useLocale } from "@/components/LocaleProvider";
 
 /* Placeholder images per-slug — used only when the Sanity category has no image */
 const PLACEHOLDER_IMAGES: Record<string, string> = {
-  womenswear: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600&q=80",
-  menswear: "https://images.unsplash.com/photo-1617137968427-85924c800a22?w=600&q=80",
-  "raw-fabrics": "https://images.unsplash.com/photo-1606722590583-6951b5ea92ad?w=600&q=80",
+  womenswear: "https://images.pexels.com/photos/6153354/pexels-photo-6153354.jpeg?auto=compress&cs=tinysrgb&w=600",
+  menswear: "https://images.pexels.com/photos/7679863/pexels-photo-7679863.jpeg?auto=compress&cs=tinysrgb&w=600",
+  "raw-fabrics": "https://images.pexels.com/photos/6044266/pexels-photo-6044266.jpeg?auto=compress&cs=tinysrgb&w=600",
+  fabrics: "https://images.pexels.com/photos/6044266/pexels-photo-6044266.jpeg?auto=compress&cs=tinysrgb&w=600",
 };
 
 interface CategoryFromAPI {

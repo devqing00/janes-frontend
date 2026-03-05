@@ -14,7 +14,26 @@ interface SearchResult {
   slug: string;
   price: number;
   image: string | null;
-  category: string;
+  category: string | { _id: string; title: string; slug: string };
+  isFabricVariant?: boolean;
+  tags?: Array<{
+    slug?: string;
+    fabricPrice?: number;
+    fabricPricePerN?: number;
+    fabricUnit?: string;
+  }>;
+}
+
+function getSearchDisplayPrice(
+  p: SearchResult,
+  formatPrice: (n: number) => string,
+): string {
+  if (p.isFabricVariant && p.tags?.[0]?.fabricPrice) {
+    const perN = p.tags[0].fabricPricePerN && p.tags[0].fabricPricePerN > 0 ? p.tags[0].fabricPricePerN : 1;
+    const unit = p.tags[0].fabricUnit || "yard";
+    return `${formatPrice(p.tags[0].fabricPrice / perN)}/${unit}`;
+  }
+  return formatPrice(p.price);
 }
 
 export default function SearchOverlay() {
@@ -176,7 +195,7 @@ export default function SearchOverlay() {
                 {results.map((product) => (
                   <Link
                     key={product._id}
-                    href={`/shop/${product.slug}`}
+                    href={product.isFabricVariant && product.tags?.[0]?.slug ? `/shop/fabric-group/${product.tags[0].slug}` : `/shop/${product.slug}`}
                     onClick={closeSearch}
                     className="flex items-center gap-4 py-3 px-3 -mx-3 rounded-lg hover:bg-white/5 transition-colors group"
                   >
@@ -200,10 +219,18 @@ export default function SearchOverlay() {
                         {product.name}
                       </p>
                       <p className="text-white/40 text-xs mt-0.5">
-                        {categoryLabels[product.category] || product.category}
+                        {(() => {
+                          const catSlug = typeof product.category === "object" && product.category?.slug
+                            ? product.category.slug
+                            : typeof product.category === "string" ? product.category : "";
+                          const catTitle = typeof product.category === "object" && product.category?.title
+                            ? product.category.title
+                            : typeof product.category === "string" ? product.category : "";
+                          return categoryLabels[catSlug] || catTitle || catSlug;
+                        })()}
                       </p>
                     </div>
-                    <p className="text-white/60 text-sm">{formatPrice(product.price)}</p>
+                    <p className="text-white/60 text-sm">{getSearchDisplayPrice(product, formatPrice)}</p>
                   </Link>
                 ))}
               </div>

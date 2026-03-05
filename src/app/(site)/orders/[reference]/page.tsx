@@ -10,6 +10,7 @@ interface OrderItem {
   price: number;
   quantity: number;
   size?: string;
+  unit?: string;
 }
 
 interface Order {
@@ -200,7 +201,7 @@ export default function OrderLookupPage({ params }: { params: Promise<{ referenc
                   <div key={i} className="flex justify-between text-sm">
                     <div>
                       <p className="text-[#1A1A1A]">{item.name} {item.size ? `(${item.size})` : ""}</p>
-                      <p className="text-[#999] text-xs">Qty: {item.quantity}</p>
+                      <p className="text-[#999] text-xs">Qty: {item.quantity}{item.unit ? ` ${item.unit}${item.quantity !== 1 ? "s" : ""}` : ""}</p>
                     </div>
                     <p className="text-[#1A1A1A]">{fmtPrice(item.price * item.quantity, order.currency)}</p>
                   </div>

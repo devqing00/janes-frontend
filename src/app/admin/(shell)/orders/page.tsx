@@ -64,6 +64,19 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
   bank_transfer: "Bank Transfer",
 };
 
+// Must mirror the server-side ALLOWED_TRANSITIONS in /api/admin/orders/route.ts
+const ALLOWED_TRANSITIONS: Record<string, string[]> = {
+  pending:          ["processing", "success", "failed"],
+  awaiting_payment: ["success", "failed"],
+  success:          ["processing", "refunded", "disputed"],
+  processing:       ["shipped", "refunded", "disputed"],
+  shipped:          ["delivered", "refunded", "disputed"],
+  delivered:        ["refunded", "disputed"],
+  failed:           ["pending"],
+  refunded:         [],
+  disputed:         ["refunded"],
+};
+
 export default function AdminOrdersPage() {
   const { data: orders = [], isLoading, mutate } = useSWR<Order[]>(
     "/api/admin/orders",
@@ -74,9 +87,17 @@ export default function AdminOrdersPage() {
   const [selected, setSelected] = useState<Order | null>(null);
   const [filter, setFilter] = useState<"all" | "success" | "pending" | "awaiting_payment" | "failed">("all");
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [statusError, setStatusError] = useState("");
 
-  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+  const handleStatusUpdate = async (orderId: string, currentStatus: string, newStatus: string) => {
+    // No-op: same status or no valid transition
+    if (newStatus === currentStatus) return;
+    const allowed = ALLOWED_TRANSITIONS[currentStatus] ?? [];
+    if (!allowed.includes(newStatus)) return;
+
     const typed = newStatus as Order["status"];
+    const snapshot = orders;
+    setStatusError("");
 
     // Optimistic update — reflect instantly in list and detail panel
     mutate(
@@ -87,14 +108,22 @@ export default function AdminOrdersPage() {
 
     setUpdatingStatus(true);
     try {
-      await fetch("/api/admin/orders", {
+      const res = await fetch("/api/admin/orders", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId, status: newStatus }),
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setStatusError(err.error ?? `Failed to update status (${res.status})`);
+        // Rollback optimistic update
+        mutate(snapshot, { revalidate: false });
+        setSelected((prev) => (prev?._id === orderId ? { ...prev, status: currentStatus as Order["status"] } : prev));
+      }
     } catch {
-      // Rollback on network error
-      mutate();
+      setStatusError("Network error — please try again.");
+      mutate(snapshot, { revalidate: false });
+      setSelected((prev) => (prev?._id === orderId ? { ...prev, status: currentStatus as Order["status"] } : prev));
     } finally {
       setUpdatingStatus(false);
     }
@@ -370,19 +399,42 @@ export default function AdminOrdersPage() {
                 {/* Status update */}
                 <div className="border-t border-brand-border pt-3">
                   <p className="text-[10px] uppercase tracking-[0.15em] text-[#999] mb-2">Update Status</p>
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={selected.status}
-                      onChange={(e) => handleStatusUpdate(selected._id, e.target.value)}
-                      disabled={updatingStatus}
-                      className="flex-1 border border-brand-border rounded px-3 py-2 text-sm focus:outline-none focus:border-brand-accent transition-colors disabled:opacity-50"
-                    >
-                      {Object.entries(STATUS_LABELS).map(([value, { label }]) => (
-                        <option key={value} value={value}>{label}</option>
-                      ))}
-                    </select>
-                    {updatingStatus && <span className="text-[#999] text-xs">Saving…</span>}
-                  </div>
+                  {(() => {
+                    const nextStatuses = ALLOWED_TRANSITIONS[selected.status] ?? [];
+                    const noTransitions = nextStatuses.length === 0;
+                    return (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <select
+                            value=""
+                            onChange={(e) => {
+                              if (e.target.value) handleStatusUpdate(selected._id, selected.status, e.target.value);
+                            }}
+                            disabled={updatingStatus || noTransitions}
+                            className="flex-1 border border-brand-border rounded px-3 py-2 text-sm focus:outline-none focus:border-brand-accent transition-colors disabled:opacity-50 bg-white"
+                          >
+                            <option value="" disabled>
+                              {noTransitions ? "No further transitions" : "Move to…"}
+                            </option>
+                            {nextStatuses.map((value) => (
+                              <option key={value} value={value}>
+                                {STATUS_LABELS[value]?.label ?? value}
+                              </option>
+                            ))}
+                          </select>
+                          {updatingStatus && (
+                            <svg className="animate-spin w-4 h-4 text-brand-accent shrink-0" viewBox="0 0 24 24" fill="none">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                            </svg>
+                          )}
+                        </div>
+                        {statusError && (
+                          <p className="text-red-500 text-[11px] mt-1.5">{statusError}</p>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </div>

@@ -175,20 +175,11 @@ export async function POST(req: NextRequest) {
 
     const { data } = await paystackRes.json();
 
-    await writeClient.create({
-      _type: "order",
-      reference: data.reference,
-      status: "pending",
-      paymentMethod: "paystack",
-      customerName: name,
-      customerEmail: email,
-      items: orderItems,
-      subtotal,
-      currency: CURRENCY,
-      shippingAddress: shippingAddress ?? null,
-      shippingMethod: shippingMethod ?? null,
-      note: note ?? null,
-    });
+    // Do NOT create an order here. The Paystack webhook (charge.success) creates
+    // the order once payment is confirmed. This prevents ghost "pending" orders
+    // from being recorded whenever a user cancels or abandons the Paystack popup.
+    // The webhook handler already has a safety-net that creates the order if it
+    // doesn't exist yet when charge.success fires.
 
     return NextResponse.json({
       paymentMethod: "paystack",

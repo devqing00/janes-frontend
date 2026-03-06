@@ -74,7 +74,7 @@ export default function FeaturedProducts() {
 
   /* ── Bento skeleton ── */
   const BentoSkeleton = () => (
-    <div className="grid grid-cols-2 md:grid-cols-4 md:grid-rows-2 gap-3 md:gap-4 auto-rows-[280px] md:auto-rows-[320px]">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 auto-rows-[280px] md:[grid-template-rows:320px_320px]">
       <div className="col-span-2 row-span-2 bg-[#F5F0EB] animate-pulse rounded-sm" />
       <div className="bg-[#F5F0EB] animate-pulse rounded-sm" />
       <div className="bg-[#F5F0EB] animate-pulse rounded-sm" />
@@ -253,7 +253,7 @@ export default function FeaturedProducts() {
         {loading ? (
           <BentoSkeleton />
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 md:grid-rows-2 gap-3 md:gap-4 auto-rows-[280px] md:auto-rows-[320px]">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 auto-rows-[280px] md:[grid-template-rows:320px_320px]">
             {products.map((item, i) => (
               <BentoCard key={item._id} item={item} index={i} isHero={i === 0} />
             ))}

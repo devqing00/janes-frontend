@@ -113,25 +113,32 @@ export default function OrderLookupPage({ params }: { params: Promise<{ referenc
   const { t } = useLocale();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [notFound, setNotFound] = useState(false);
 
-  useEffect(() => {
-    async function fetchOrder() {
-      try {
-        const res = await fetch(`/api/orders/${encodeURIComponent(reference)}`);
-        if (res.ok) {
-          const data = await res.json();
-          setOrder(data);
-        } else {
-          setNotFound(true);
-        }
-      } catch {
+  const fetchOrder = async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    try {
+      // cache: "no-store" ensures we always get the latest status from the server
+      const res = await fetch(`/api/orders/${encodeURIComponent(reference)}`, { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        setOrder(data);
+        setNotFound(false);
+      } else {
         setNotFound(true);
-      } finally {
-        setLoading(false);
       }
+    } catch {
+      setNotFound(true);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  useEffect(() => {
     fetchOrder();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reference]);
 
   const formatDate = (iso: string) =>
@@ -240,7 +247,25 @@ export default function OrderLookupPage({ params }: { params: Promise<{ referenc
             )}
           </div>
 
-          <div className="text-center mt-8 flex justify-center gap-6">
+          <div className="text-center mt-8 flex justify-center gap-6 flex-wrap">
+            <button
+              type="button"
+              onClick={() => fetchOrder(true)}
+              disabled={refreshing}
+              className="text-[#666] uppercase text-[10px] tracking-[0.15em] hover:text-[#C08A6F] transition-colors border-b border-[#666]/30 pb-1 disabled:opacity-50 flex items-center gap-1"
+            >
+              {refreshing ? (
+                <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" strokeWidth={1.5} stroke="currentColor" className="w-3 h-3">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+              )}
+              Refresh Status
+            </button>
             <Link href="/orders" className="text-[#666] uppercase text-[10px] tracking-[0.15em] hover:text-[#C08A6F] transition-colors border-b border-[#666]/30 pb-1">
               {t("orders.title")}
             </Link>

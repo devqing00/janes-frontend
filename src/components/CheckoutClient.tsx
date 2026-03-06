@@ -180,10 +180,22 @@ export default function CheckoutClient() {
 
   const applyAutofill = () => {
     if (!savedCheckout) return;
-    setEmail(savedCheckout.email);
-    setDelivery(savedCheckout.delivery);
+    if (savedCheckout.email) setEmail(savedCheckout.email);
     setDraft(savedCheckout.delivery);
-    setDeliveryStep("done");
+    setDraftErrors({});
+    // If the saved address has all required fields, apply it as finished.
+    // Otherwise open the form pre-filled so the user can fill missing fields
+    // (Google accounts typically don't include a street address).
+    const hasAddress =
+      savedCheckout.delivery.line1.trim() &&
+      savedCheckout.delivery.city.trim() &&
+      savedCheckout.delivery.country.trim();
+    if (hasAddress) {
+      setDelivery(savedCheckout.delivery);
+      setDeliveryStep("done");
+    } else {
+      setDeliveryStep("editing");
+    }
     setShowAutofill(false);
   };
 

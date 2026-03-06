@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useCart } from "./CartProvider";
 import { useSiteSettings } from "./SiteSettingsProvider";
+import { useWishlist } from "./WishlistProvider";
 
 export interface FabricVariant {
   _id: string;
@@ -45,6 +46,7 @@ export default function FabricGroupClient({
 }: Props) {
   const { addItem } = useCart();
   const { formatPrice } = useSiteSettings();
+  const { toggleItem, isInWishlist } = useWishlist();
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(min);
@@ -269,28 +271,68 @@ export default function FabricGroupClient({
                     <span className="text-base font-medium text-[#1A1A1A]">{formatPrice(unitPrice * quantity)}</span>
                   </div>
 
-                  {/* Add to cart */}
-                  <button
-                    type="button"
-                    onClick={handleAddToCart}
-                    disabled={added}
-                    className={`w-full text-sm font-medium py-4 rounded-xl tracking-wide transition-all duration-300 ${
-                      added
-                        ? "bg-green-600 text-white"
-                        : "bg-[#1A1A1A] text-white hover:bg-[#C08A6F]"
-                    }`}
-                  >
-                    {added ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                        </svg>
-                        Added to Cart
-                      </span>
-                    ) : (
-                      `Add ${quantity} ${unitLabel}${quantity !== 1 ? "s" : ""} to Cart`
-                    )}
-                  </button>
+                  {/* Add to cart + Wishlist */}
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={handleAddToCart}
+                      disabled={added}
+                      className={`flex-1 text-sm font-medium py-4 rounded-xl tracking-wide transition-all duration-300 ${
+                        added
+                          ? "bg-green-600 text-white"
+                          : "bg-[#1A1A1A] text-white hover:bg-[#C08A6F]"
+                      }`}
+                    >
+                      {added ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                          </svg>
+                          Added to Cart
+                        </span>
+                      ) : (
+                        `Add ${quantity} ${unitLabel}${quantity !== 1 ? "s" : ""} to Cart`
+                      )}
+                    </button>
+
+                    {/* Wishlist toggle */}
+                    <button
+                      type="button"
+                      aria-label={isInWishlist(selected._id) ? "Remove from wishlist" : "Save to wishlist"}
+                      onClick={() =>
+                        toggleItem({
+                          _id: selected._id,
+                          name: `${tagName} #${selectedIndex! + 1}`,
+                          slug: tagSlug,
+                          price: unitPrice,
+                          image: selected.imageUrl,
+                        })
+                      }
+                      className={`w-14 rounded-xl border transition-all duration-200 flex items-center justify-center shrink-0 ${
+                        isInWishlist(selected._id)
+                          ? "border-[#C08A6F] bg-[#fdf9f7]"
+                          : "border-black/10 hover:border-[#C08A6F] bg-white"
+                      }`}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className={`w-5 h-5 transition-colors ${
+                          isInWishlist(selected._id)
+                            ? "fill-[#C08A6F] stroke-[#C08A6F]"
+                            : "fill-none stroke-[#1A1A1A]"
+                        }`}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="pt-8 pb-4 text-center">

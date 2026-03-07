@@ -92,13 +92,17 @@ function StatusTimeline({ status }: { status: string }) {
                   )}
                 </div>
                 <span className={`text-[9px] uppercase tracking-wider mt-1.5 whitespace-nowrap ${
-                  isCurrent ? "text-[#C08A6F] font-medium" : isComplete ? "text-[#1A1A1A]" : "text-[#CCC]"
+                  isCurrent
+                    ? "text-[#C08A6F] font-medium"
+                    : isComplete
+                    ? "text-[#1A1A1A] hidden md:block"
+                    : "text-[#CCC] hidden md:block"
                 }`}>
                   {step.label}
                 </span>
               </div>
               {idx < STATUS_STEPS.length - 1 && (
-                <div className={`flex-1 h-0.5 mx-2 mt-[-16px] ${idx < currentIdx ? "bg-[#C08A6F]" : "bg-[#E8E2DB]"}`} />
+                <div className={`flex-1 h-0.5 mx-2 mt-0 md:mt-[-16px] ${idx < currentIdx ? "bg-[#C08A6F]" : "bg-[#E8E2DB]"}`} />
               )}
             </div>
           );
@@ -205,12 +209,12 @@ export default function OrderLookupPage({ params }: { params: Promise<{ referenc
               <p className="text-[10px] uppercase tracking-[0.15em] text-[#999] mb-3">{t("orders.items")}</p>
               <div className="space-y-3">
                 {(order.items || []).map((item, i) => (
-                  <div key={i} className="flex justify-between text-sm">
-                    <div>
-                      <p className="text-[#1A1A1A]">{item.name} {item.size ? `(${item.size})` : ""}</p>
+                  <div key={i} className="flex justify-between gap-3 text-sm">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[#1A1A1A] truncate">{item.name} {item.size ? `(${item.size})` : ""}</p>
                       <p className="text-[#999] text-xs">Qty: {item.quantity}{item.unit ? ` ${item.unit}${item.quantity !== 1 ? "s" : ""}` : ""}</p>
                     </div>
-                    <p className="text-[#1A1A1A]">{fmtPrice(item.price * item.quantity, order.currency)}</p>
+                    <p className="text-[#1A1A1A] shrink-0">{fmtPrice(item.price * item.quantity, order.currency)}</p>
                   </div>
                 ))}
               </div>

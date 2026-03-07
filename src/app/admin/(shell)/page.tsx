@@ -29,6 +29,12 @@ type OrderSummary = {
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
+// Orders API returns { orders: [], totalCount, page, limit } – unwrap the array
+const ordersFetcher = (url: string) =>
+  fetch(url)
+    .then((r) => r.json())
+    .then((d) => (Array.isArray(d.orders) ? d.orders : Array.isArray(d) ? d : []));
+
 function getDisplayPrice(p: RecentProduct): string {
   if (p.isFabricVariant && p.tag?.fabricPrice) {
     const perN = p.tag.fabricPricePerN > 0 ? p.tag.fabricPricePerN : 1;
@@ -63,7 +69,7 @@ export default function AdminDashboardPage() {
   );
   const { data: orders = [], isLoading: ordersLoading } = useSWR<OrderSummary[]>(
     "/api/admin/orders",
-    fetcher,
+    ordersFetcher,
     { revalidateOnFocus: true }
   );
 

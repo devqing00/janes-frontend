@@ -67,7 +67,9 @@ function StatusTimeline({ status }: { status: string }) {
               isComplete ? (isCurrent ? "bg-[#C08A6F]" : "bg-[#C08A6F]/60") : "bg-gray-200"
             }`} />
             <span className={`text-[9px] uppercase tracking-widest ${
-              isComplete ? "text-[#1A1A1A]" : "text-gray-300"
+              isCurrent
+                ? isComplete ? "text-[#1A1A1A]" : "text-gray-300"
+                : isComplete ? "hidden md:inline text-[#1A1A1A]" : "hidden md:inline text-gray-300"
             }`}>
               {step}
             </span>

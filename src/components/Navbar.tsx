@@ -29,7 +29,15 @@ export default function Navbar() {
   const accountRef = useRef<HTMLDivElement>(null);
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
-  const [categoryTree, setCategoryTree] = useState<{ _id: string; title: string; slug: string; level: number; parent?: { _id: string; slug: string } | null }[]>([]);
+  const [categoryTree, setCategoryTree] = useState<
+    {
+      _id: string;
+      title: string;
+      slug: string;
+      level: number;
+      parent?: { _id: string; slug: string } | null;
+    }[]
+  >([]);
 
   // Fetch dynamic category tree
   useEffect(() => {
@@ -40,20 +48,27 @@ export default function Navbar() {
           const tree = await res.json();
           setCategoryTree(Array.isArray(tree) ? tree : []);
         }
-      } catch { /* fallback: empty dropdown */ }
+      } catch {
+        /* fallback: empty dropdown */
+      }
     }
     fetchCats();
   }, []);
 
   // Build navLinks with dynamic shop dropdown (hierarchical)
   const shopDropdown = (() => {
-    const items: { label: string; href: string }[] = [{ label: t("common.viewAll"), href: "/shop" }];
+    const items: { label: string; href: string }[] = [
+      { label: t("common.viewAll"), href: "/shop" },
+    ];
     const l1 = categoryTree.filter((c) => c.level === 1);
     const l2 = categoryTree.filter((c) => c.level === 2);
     l1.forEach((cat) => {
       items.push({ label: cat.title, href: `/shop?category=${cat.slug}` });
       l2.filter((sub) => sub.parent?._id === cat._id).forEach((sub) => {
-        items.push({ label: `  ${sub.title}`, href: `/shop?category=${cat.slug}&subcategory=${sub.slug}` });
+        items.push({
+          label: `  ${sub.title}`,
+          href: `/shop?category=${cat.slug}&subcategory=${sub.slug}`,
+        });
       });
     });
     return items;
@@ -90,7 +105,13 @@ export default function Navbar() {
   ];
 
   // Pages with dark hero where navbar should be transparent initially
-  const isHeroPage = pathname === "/" || pathname === "/shop" || pathname === "/collections" || pathname === "/lookbook" || pathname === "/about" || pathname === "/contact";
+  const isHeroPage =
+    pathname === "/" ||
+    pathname === "/shop" ||
+    pathname === "/collections" ||
+    pathname === "/lookbook" ||
+    pathname === "/about" ||
+    pathname === "/contact";
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
@@ -102,16 +123,24 @@ export default function Navbar() {
   // Lock body scroll when mobile menu is open
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [mobileOpen]);
 
   // Close currency / account dropdowns on click outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (currencyRef.current && !currencyRef.current.contains(e.target as Node)) {
+      if (
+        currencyRef.current &&
+        !currencyRef.current.contains(e.target as Node)
+      ) {
         setCurrencyOpen(false);
       }
-      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+      if (
+        accountRef.current &&
+        !accountRef.current.contains(e.target as Node)
+      ) {
         setAccountOpen(false);
       }
       if (langRef.current && !langRef.current.contains(e.target as Node)) {
@@ -163,16 +192,24 @@ export default function Navbar() {
           {/* Desktop links */}
           <div className="hidden lg:flex items-center gap-10">
             {navLinks.map((link) => {
-              const isActive = link.href !== "#" && (pathname === link.href || pathname.startsWith(link.href + "/") || pathname.startsWith(link.href + "?"));
+              const isActive =
+                link.href !== "#" &&
+                (pathname === link.href ||
+                  pathname.startsWith(link.href + "/") ||
+                  pathname.startsWith(link.href + "?"));
               const hasDropdown = link.dropdown && link.dropdown.length > 0;
 
               return (
                 <div
                   key={link.label}
                   className="relative"
-                  onMouseEnter={() => hasDropdown ? handleMouseEnter(link.label) : undefined}
+                  onMouseEnter={() =>
+                    hasDropdown ? handleMouseEnter(link.label) : undefined
+                  }
                   onMouseLeave={hasDropdown ? handleMouseLeave : undefined}
-                  onFocus={() => hasDropdown ? handleMouseEnter(link.label) : undefined}
+                  onFocus={() =>
+                    hasDropdown ? handleMouseEnter(link.label) : undefined
+                  }
                   onBlur={hasDropdown ? handleMouseLeave : undefined}
                 >
                   {link.href === "#" ? (
@@ -181,35 +218,71 @@ export default function Navbar() {
                       aria-haspopup="true"
                       onKeyDown={(e) => handleDropdownKeyDown(e, link.label)}
                       className={`relative uppercase text-[10px] tracking-[0.25em] transition-colors duration-300 flex items-center gap-1 ${
-                        isActive ? "text-white" : "text-white/60 hover:text-white"
+                        isActive
+                          ? "text-white"
+                          : "text-white/60 hover:text-white"
                       }`}
                     >
                       {link.label}
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-2.5 h-2.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                        stroke="currentColor"
+                        className="w-2.5 h-2.5"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                        />
                       </svg>
                     </button>
                   ) : (
                     <Link
                       href={link.href}
-                      aria-expanded={hasDropdown ? activeDropdown === link.label : undefined}
+                      aria-expanded={
+                        hasDropdown ? activeDropdown === link.label : undefined
+                      }
                       aria-haspopup={hasDropdown ? "true" : undefined}
-                      onKeyDown={hasDropdown ? (e) => handleDropdownKeyDown(e, link.label) : undefined}
+                      onKeyDown={
+                        hasDropdown
+                          ? (e) => handleDropdownKeyDown(e, link.label)
+                          : undefined
+                      }
                       className={`relative uppercase text-[10px] tracking-[0.25em] transition-colors duration-300 flex items-center gap-1 ${
-                        isActive ? "text-white" : "text-white/60 hover:text-white"
+                        isActive
+                          ? "text-white"
+                          : "text-white/60 hover:text-white"
                       }`}
                     >
                       {link.label}
                       {hasDropdown && (
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-2.5 h-2.5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={2}
+                          stroke="currentColor"
+                          className="w-2.5 h-2.5"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                          />
                         </svg>
                       )}
                       {isActive && (
                         <motion.span
                           layoutId="navbar-indicator"
                           className="absolute -bottom-1 left-0 right-0 h-px bg-brand-accent"
-                          transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 350,
+                            damping: 30,
+                          }}
                         />
                       )}
                     </Link>
@@ -227,7 +300,10 @@ export default function Navbar() {
                         onMouseEnter={() => handleMouseEnter(link.label)}
                         onMouseLeave={handleMouseLeave}
                       >
-                        <div className="bg-[#232323] border border-white/10 rounded-lg py-2 min-w-[180px] shadow-xl" role="menu">
+                        <div
+                          className="bg-[#232323] border border-white/10 rounded-lg py-2 min-w-[180px] shadow-xl"
+                          role="menu"
+                        >
                           {link.dropdown!.map((sub) => (
                             <Link
                               key={sub.href}
@@ -257,8 +333,19 @@ export default function Navbar() {
                 className="text-white/60 hover:text-white transition-colors duration-300 text-[10px] uppercase tracking-[0.15em] font-medium flex items-center gap-1"
               >
                 {currency}
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-2.5 h-2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="w-2.5 h-2.5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                  />
                 </svg>
               </button>
               <AnimatePresence>
@@ -273,9 +360,14 @@ export default function Navbar() {
                     {currencyOptions.map((opt) => (
                       <button
                         key={opt.code}
-                        onClick={() => { setCurrency(opt.code); setCurrencyOpen(false); }}
+                        onClick={() => {
+                          setCurrency(opt.code);
+                          setCurrencyOpen(false);
+                        }}
                         className={`block w-full text-left px-4 py-2 text-[10px] uppercase tracking-[0.15em] transition-colors ${
-                          currency === opt.code ? "text-[#C08A6F]" : "text-white/60 hover:text-white hover:bg-white/5"
+                          currency === opt.code
+                            ? "text-[#C08A6F]"
+                            : "text-white/60 hover:text-white hover:bg-white/5"
                         }`}
                       >
                         {opt.label}
@@ -296,10 +388,25 @@ export default function Navbar() {
                     className="text-white/60 hover:text-white transition-colors duration-300 flex items-center gap-1.5"
                   >
                     {user.photoURL ? (
-                      <img src={user.photoURL} alt="" className="w-5 h-5 rounded-full object-cover" />
+                      <img
+                        src={user.photoURL}
+                        alt=""
+                        className="w-5 h-5 rounded-full object-cover"
+                      />
                     ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-[18px] h-[18px]">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className="w-[18px] h-[18px]"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+                        />
                       </svg>
                     )}
                   </button>
@@ -313,8 +420,12 @@ export default function Navbar() {
                         className="absolute top-full right-0 mt-2 bg-[#232323] border border-white/10 rounded-lg py-2 min-w-[180px] shadow-xl z-50"
                       >
                         <div className="px-4 py-2 border-b border-white/10">
-                          <p className="text-white text-xs font-medium truncate">{user.displayName || user.email}</p>
-                          <p className="text-white/40 text-[10px] truncate">{user.email}</p>
+                          <p className="text-white text-xs font-medium truncate">
+                            {user.displayName || user.email}
+                          </p>
+                          <p className="text-white/40 text-[10px] truncate">
+                            {user.email}
+                          </p>
                         </div>
                         <Link
                           href="/orders"
@@ -324,7 +435,10 @@ export default function Navbar() {
                           {t("nav.myOrders")}
                         </Link>
                         <button
-                          onClick={() => { signOut(); setAccountOpen(false); }}
+                          onClick={() => {
+                            signOut();
+                            setAccountOpen(false);
+                          }}
                           className="block w-full text-left px-4 py-2.5 text-white/60 text-[10px] uppercase tracking-[0.15em] hover:text-white hover:bg-white/5 transition-colors"
                         >
                           {t("nav.signOut")}
@@ -339,10 +453,23 @@ export default function Navbar() {
                   onClick={signInWithGoogle}
                   className="text-white/60 hover:text-white transition-colors duration-300 flex items-center gap-1.5"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-[18px] h-[18px]">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-[18px] h-[18px]"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+                    />
                   </svg>
-                  <span className="text-[10px] uppercase tracking-[0.15em] font-medium">{t("nav.signIn")}</span>
+                  <span className="text-[10px] uppercase tracking-[0.15em] font-medium">
+                    {t("nav.signIn")}
+                  </span>
                 </button>
               )}
             </div>
@@ -355,8 +482,19 @@ export default function Navbar() {
                 className="text-white/60 hover:text-white transition-colors duration-300 text-[10px] uppercase tracking-[0.15em] font-medium flex items-center gap-1"
               >
                 {locale.toUpperCase()}
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-2.5 h-2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="w-2.5 h-2.5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                  />
                 </svg>
               </button>
               <AnimatePresence>
@@ -371,9 +509,14 @@ export default function Navbar() {
                     {LOCALES.map((loc) => (
                       <button
                         key={loc.code}
-                        onClick={() => { setLocale(loc.code); setLangOpen(false); }}
+                        onClick={() => {
+                          setLocale(loc.code);
+                          setLangOpen(false);
+                        }}
                         className={`block w-full text-left px-4 py-2 text-[10px] uppercase tracking-[0.15em] transition-colors ${
-                          locale === loc.code ? "text-[#C08A6F]" : "text-white/60 hover:text-white hover:bg-white/5"
+                          locale === loc.code
+                            ? "text-[#C08A6F]"
+                            : "text-white/60 hover:text-white hover:bg-white/5"
                         }`}
                       >
                         {loc.label}
@@ -390,8 +533,19 @@ export default function Navbar() {
               onClick={openSearch}
               className="text-white/60 hover:text-white transition-colors duration-300"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-[18px] h-[18px]">
-                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-[18px] h-[18px]"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                />
               </svg>
             </button>
 
@@ -401,8 +555,19 @@ export default function Navbar() {
               aria-label={t("nav.wishlist")}
               className="hidden lg:flex text-white/60 hover:text-white transition-colors duration-300 relative"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-[18px] h-[18px]">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-[18px] h-[18px]"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
+                />
               </svg>
               {wishlistCount > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 bg-[#C08A6F] text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-medium">
@@ -417,8 +582,19 @@ export default function Navbar() {
               onClick={openCart}
               className="text-white/60 hover:text-white transition-colors duration-300 relative"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-[18px] h-[18px]">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-[18px] h-[18px]"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
+                />
               </svg>
               {itemCount > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 bg-[#C08A6F] text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-medium">
@@ -433,8 +609,19 @@ export default function Navbar() {
               className="lg:hidden text-white/60 hover:text-white transition-colors duration-300"
               onClick={() => setMobileOpen(!mobileOpen)}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-6 h-6"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3.75 9h16.5m-16.5 6.75h16.5"
+                />
               </svg>
             </button>
           </div>
@@ -469,8 +656,19 @@ export default function Navbar() {
                 onClick={() => setMobileOpen(false)}
                 className="text-white/60 hover:text-white transition-colors"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-7 h-7"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18 18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -478,68 +676,86 @@ export default function Navbar() {
             {/* Nav links */}
             <nav className="flex-1 flex items-center justify-center px-8 md:px-16 w-full">
               {/* Mobile: single centered column. md+: two columns flanking a fading divider */}
-              <div className="w-full flex flex-col items-center gap-6 md:grid md:gap-0"
-                style={{ gridTemplateColumns: "1fr 1px 1fr" }}>
-
+              <div
+                className="w-full flex flex-col items-center gap-6 md:grid md:gap-0"
+                style={{ gridTemplateColumns: "1fr 1px 1fr" }}
+              >
                 {/* Left column — right-aligned on md+ */}
                 <div className="flex flex-col items-center md:items-end gap-6 md:gap-8 md:pr-12 lg:pr-16">
-                  {mobileLinks.filter((_, i) => i % 2 === 0).map((link, idx) => {
-                    const globalIdx = idx * 2;
-                    const isActive = pathname === link.href;
-                    return (
-                      <motion.div
-                        key={link.label}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.08 + globalIdx * 0.05, duration: 0.4, ease: "easeOut" as const }}
-                        className="md:text-right"
-                      >
-                        <Link
-                          href={link.href}
-                          onClick={() => setMobileOpen(false)}
-                          className={`font-serif text-4xl md:text-5xl tracking-wide transition-colors ${
-                            isActive ? "text-brand-accent" : "text-white hover:text-brand-accent"
-                          }`}
+                  {mobileLinks
+                    .filter((_, i) => i % 2 === 0)
+                    .map((link, idx) => {
+                      const globalIdx = idx * 2;
+                      const isActive = pathname === link.href;
+                      return (
+                        <motion.div
+                          key={link.label}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{
+                            delay: 0.08 + globalIdx * 0.05,
+                            duration: 0.4,
+                            ease: "easeOut" as const,
+                          }}
+                          className="md:text-right"
                         >
-                          {link.label}
-                        </Link>
-                      </motion.div>
-                    );
-                  })}
+                          <Link
+                            href={link.href}
+                            onClick={() => setMobileOpen(false)}
+                            className={`font-serif text-4xl md:text-5xl tracking-wide transition-colors ${
+                              isActive
+                                ? "text-brand-accent"
+                                : "text-white hover:text-brand-accent"
+                            }`}
+                          >
+                            {link.label}
+                          </Link>
+                        </motion.div>
+                      );
+                    })}
                 </div>
 
                 {/* Fading vertical divider — hidden on mobile */}
                 <div
                   className="hidden md:block self-stretch w-px"
                   style={{
-                    background: "linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.18) 20%, rgba(255,255,255,0.18) 80%, transparent 100%)",
+                    background:
+                      "linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.18) 20%, rgba(255,255,255,0.18) 80%, transparent 100%)",
                   }}
                 />
 
                 {/* Right column — left-aligned on md+ */}
                 <div className="flex flex-col items-center md:items-start gap-6 md:gap-8 md:pl-12 lg:pl-16">
-                  {mobileLinks.filter((_, i) => i % 2 === 1).map((link, idx) => {
-                    const globalIdx = idx * 2 + 1;
-                    const isActive = pathname === link.href;
-                    return (
-                      <motion.div
-                        key={link.label}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.08 + globalIdx * 0.05, duration: 0.4, ease: "easeOut" as const }}
-                      >
-                        <Link
-                          href={link.href}
-                          onClick={() => setMobileOpen(false)}
-                          className={`font-serif text-4xl md:text-5xl tracking-wide transition-colors ${
-                            isActive ? "text-brand-accent" : "text-white hover:text-brand-accent"
-                          }`}
+                  {mobileLinks
+                    .filter((_, i) => i % 2 === 1)
+                    .map((link, idx) => {
+                      const globalIdx = idx * 2 + 1;
+                      const isActive = pathname === link.href;
+                      return (
+                        <motion.div
+                          key={link.label}
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{
+                            delay: 0.08 + globalIdx * 0.05,
+                            duration: 0.4,
+                            ease: "easeOut" as const,
+                          }}
                         >
-                          {link.label}
-                        </Link>
-                      </motion.div>
-                    );
-                  })}
+                          <Link
+                            href={link.href}
+                            onClick={() => setMobileOpen(false)}
+                            className={`font-serif text-4xl md:text-5xl tracking-wide transition-colors ${
+                              isActive
+                                ? "text-brand-accent"
+                                : "text-white hover:text-brand-accent"
+                            }`}
+                          >
+                            {link.label}
+                          </Link>
+                        </motion.div>
+                      );
+                    })}
                 </div>
               </div>
             </nav>
@@ -551,45 +767,66 @@ export default function Navbar() {
               transition={{ delay: 0.4, duration: 0.4 }}
               className="px-8 md:px-16 pb-10 flex flex-col md:flex-row md:flex-wrap md:items-center md:justify-between items-center gap-4 md:gap-6 border-t border-white/10 pt-5"
             >
-              {/* Currency selector mobile */}
-              <div className="flex items-center gap-3 mb-2">
-                {currencyOptions.map((opt) => (
-                  <button
-                    key={opt.code}
-                    onClick={() => setCurrency(opt.code)}
-                    className={`text-[10px] uppercase tracking-widest transition-colors ${
-                      currency === opt.code ? "text-[#C08A6F]" : "text-white/30 hover:text-white/60"
-                    }`}
-                  >
-                    {opt.code}
-                  </button>
-                ))}
-              </div>
-              {/* Language selector mobile */}
-              <div className="flex items-center gap-3 mb-2">
-                {LOCALES.map((loc) => (
-                  <button
-                    key={loc.code}
-                    onClick={() => setLocale(loc.code)}
-                    className={`text-[10px] uppercase tracking-widest transition-colors ${
-                      locale === loc.code ? "text-[#C08A6F]" : "text-white/30 hover:text-white/60"
-                    }`}
-                  >
-                    {loc.flag}
-                  </button>
-                ))}
+              <div className="flex md:flex-col gap-3 md:gap-0 items-center">
+                {/* Currency selector mobile */}
+                <div className="flex items-center gap-3 mb-2 md:mb-0">
+                  {currencyOptions.map((opt) => (
+                    <button
+                      key={opt.code}
+                      onClick={() => setCurrency(opt.code)}
+                      className={`text-[10px] uppercase tracking-widest transition-colors ${
+                        currency === opt.code
+                          ? "text-[#C08A6F]"
+                          : "text-white/30 hover:text-white/60"
+                      }`}
+                    >
+                      {opt.code}
+                    </button>
+                  ))}
+                </div>
+                {/* Language selector mobile */}
+                <div className="flex items-center gap-3 mb-2 md:mb-0">
+                  {LOCALES.map((loc) => (
+                    <button
+                      key={loc.code}
+                      onClick={() => setLocale(loc.code)}
+                      className={`text-[10px] uppercase tracking-widest transition-colors ${
+                        locale === loc.code
+                          ? "text-[#C08A6F]"
+                          : "text-white/30 hover:text-white/60"
+                      }`}
+                    >
+                      {loc.flag}
+                    </button>
+                  ))}
+                </div>
               </div>
               {/* Account mobile */}
               {user ? (
-                <button
-                  onClick={() => { signOut(); setMobileOpen(false); }}
-                  className="text-white/40 uppercase text-[10px] tracking-widest hover:text-white/60 transition-colors"
-                >
-                  {t("nav.signOut")} ({user.displayName || user.email})
-                </button>
+                <div className="flex flex-col items-center gap-2">
+                  <Link
+                    href="/orders"
+                    onClick={() => setMobileOpen(false)}
+                    className="text-[#C08A6F] uppercase text-[10px] tracking-widest hover:text-white transition-colors"
+                  >
+                    {t("nav.myOrders")}
+                  </Link>
+                  <button
+                    onClick={() => {
+                      signOut();
+                      setMobileOpen(false);
+                    }}
+                    className="text-white/40 uppercase text-[10px] tracking-widest hover:text-white/60 transition-colors"
+                  >
+                    {t("nav.signOut")} ({user.displayName || user.email})
+                  </button>
+                </div>
               ) : (
                 <button
-                  onClick={() => { signInWithGoogle(); setMobileOpen(false); }}
+                  onClick={() => {
+                    signInWithGoogle();
+                    setMobileOpen(false);
+                  }}
                   className="text-[#C08A6F] uppercase text-[10px] tracking-widest hover:text-white transition-colors"
                 >
                   {t("nav.signIn")}

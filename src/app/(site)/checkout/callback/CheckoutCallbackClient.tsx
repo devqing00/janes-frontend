@@ -237,12 +237,22 @@ function CallbackContent() {
         <p className="text-[#999] text-[11px] max-w-sm">
           Your order will be confirmed once we verify your transfer. This usually takes 1–2 business hours.
         </p>
-        <Link
-          href="/shop"
-          className="text-[10px] uppercase tracking-[0.2em] border border-brand-text px-6 py-3 hover:bg-brand-text hover:text-white transition-colors"
-        >
-          Continue Shopping
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-3">
+          {btReference && (
+            <Link
+              href={`/orders/${encodeURIComponent(btReference)}`}
+              className="text-[10px] uppercase tracking-[0.2em] bg-brand-accent text-white px-6 py-3 hover:bg-[#a8755c] transition-colors text-center"
+            >
+              Track Your Order
+            </Link>
+          )}
+          <Link
+            href="/shop"
+            className="text-[10px] uppercase tracking-[0.2em] border border-brand-text px-6 py-3 hover:bg-brand-text hover:text-white transition-colors text-center"
+          >
+            Continue Shopping
+          </Link>
+        </div>
       </div>
     );
   }
@@ -273,12 +283,22 @@ function CallbackContent() {
             </p>
           )}
         </div>
-        <Link
-          href="/shop"
-          className="text-[10px] uppercase tracking-[0.2em] border border-brand-text px-6 py-3 hover:bg-brand-text hover:text-white transition-colors"
-        >
-          Continue Shopping
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-3">
+          {reference && (
+            <Link
+              href={`/orders/${encodeURIComponent(reference)}`}
+              className="text-[10px] uppercase tracking-[0.2em] bg-brand-accent text-white px-6 py-3 hover:bg-[#a8755c] transition-colors text-center"
+            >
+              Track Your Order
+            </Link>
+          )}
+          <Link
+            href="/shop"
+            className="text-[10px] uppercase tracking-[0.2em] border border-brand-text px-6 py-3 hover:bg-brand-text hover:text-white transition-colors text-center"
+          >
+            Continue Shopping
+          </Link>
+        </div>
       </div>
     );
   }
@@ -309,16 +329,24 @@ function CallbackContent() {
         <p className="text-[#bbb] text-[11px] max-w-xs">
           If you don&apos;t receive a confirmation within 10 minutes, please contact us with your reference number.
         </p>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
+          {reference && (
+            <Link
+              href={`/orders/${encodeURIComponent(reference)}`}
+              className="text-[10px] uppercase tracking-[0.2em] bg-brand-accent text-white px-6 py-3 hover:bg-[#a8755c] transition-colors text-center"
+            >
+              Check Order Status
+            </Link>
+          )}
           <Link
             href="/shop"
-            className="text-[10px] uppercase tracking-[0.2em] border border-brand-text px-6 py-3 hover:bg-brand-text hover:text-white transition-colors"
+            className="text-[10px] uppercase tracking-[0.2em] border border-brand-text px-6 py-3 hover:bg-brand-text hover:text-white transition-colors text-center"
           >
             Continue Shopping
           </Link>
           <Link
             href="/contact"
-            className="text-[10px] uppercase tracking-[0.2em] text-[#999] px-6 py-3 hover:text-brand-text transition-colors"
+            className="text-[10px] uppercase tracking-[0.2em] text-[#999] px-6 py-3 hover:text-brand-text transition-colors text-center"
           >
             Contact Us
           </Link>

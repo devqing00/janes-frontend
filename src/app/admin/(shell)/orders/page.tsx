@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import useSWR from "swr";
 import Link from "next/link";
 
@@ -89,6 +89,20 @@ export default function AdminOrdersPage() {
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [statusError, setStatusError] = useState("");
 
+  // Always work from a guaranteed array — SWR can briefly yield undefined during revalidation
+  const safeOrders = Array.isArray(orders) ? orders : [];
+
+  // Auto-scroll into the detail panel when an order is selected on mobile
+  const detailRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (selected && detailRef.current) {
+      const isSmall = window.innerWidth < 1024;
+      if (isSmall) {
+        setTimeout(() => detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+      }
+    }
+  }, [selected]);
+
   const handleStatusUpdate = async (orderId: string, currentStatus: string, newStatus: string) => {
     // No-op: same status or no valid transition
     if (newStatus === currentStatus) return;
@@ -129,7 +143,7 @@ export default function AdminOrdersPage() {
     }
   };
 
-  const filtered = filter === "all" ? orders : orders.filter((o) => o.status === filter);
+  const filtered = filter === "all" ? safeOrders : safeOrders.filter((o) => o.status === filter);
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString("en-GB", {
@@ -148,7 +162,7 @@ export default function AdminOrdersPage() {
         <div>
           <h1 className="text-xl sm:text-2xl font-medium text-brand-text">Orders</h1>
           <p className="text-sm text-[#999] mt-0.5">
-            {orders.length} order{orders.length !== 1 ? "s" : ""} total
+            {safeOrders.length} order{safeOrders.length !== 1 ? "s" : ""} total
           </p>
         </div>
         <button
@@ -164,7 +178,7 @@ export default function AdminOrdersPage() {
 
       {/* Bank transfer action banner */}
       {(() => {
-        const pending = orders.filter(
+        const pending = safeOrders.filter(
           (o) => o.status === "awaiting_payment" && o.paymentMethod === "bank_transfer"
         );
         if (pending.length === 0) return null;
@@ -200,7 +214,7 @@ export default function AdminOrdersPage() {
             {tab === "all" ? "All" : STATUS_LABELS[tab].label}
             {tab !== "all" && (
               <span className="ml-1.5 text-[9px]">
-                ({orders.filter((o) => o.status === tab).length})
+                ({safeOrders.filter((o) => o.status === tab).length})
               </span>
             )}
           </button>
@@ -253,16 +267,17 @@ export default function AdminOrdersPage() {
 
           {/* Detail panel */}
           {selected ? (
-            <div className="border border-brand-border bg-white p-5 h-fit">
+            <div ref={detailRef} className="border border-brand-border bg-white p-5 h-fit scroll-mt-4">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-medium text-sm text-brand-text">Order Detail</h2>
                 <button
                   onClick={() => setSelected(null)}
-                  className="text-[#999] hover:text-brand-text transition-colors"
+                  className="text-[#999] hover:text-brand-text transition-colors flex items-center gap-1.5 text-[10px] uppercase tracking-[0.1em]"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                   </svg>
+                  <span className="lg:hidden">Back to list</span>
                 </button>
               </div>
 
